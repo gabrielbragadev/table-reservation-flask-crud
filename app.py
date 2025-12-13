@@ -35,5 +35,24 @@ def create_reservation():
     return jsonify({"message": "Reserva feita com sucesso"}), 200
 
 
+@app.route("/reservations", methods=["GET"])
+def get_reservations():
+    reservation_list = [r.to_dict() for r in reservations]
+    output = {
+        "reservations": reservation_list,
+        "total_reservations": len(reservation_list),
+    }
+    return jsonify(output)
+
+
+@app.route("/reservations/<int:id_reservation>", methods=["GET"])
+def get_reservation(id_reservation):
+    for r in reservations:
+        if r.id_reservation == id_reservation:
+            return jsonify(r.to_dict())
+
+    return jsonify({"message": "Reserva Não encontrada"}), 404
+
+
 if __name__ == "__main__":
     app.run(debug=True)
