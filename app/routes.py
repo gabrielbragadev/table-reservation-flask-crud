@@ -6,6 +6,7 @@ from app.services.read_reservations_service import Get_reservations
 from app.services.delete_reservation_service import Delete_reservation
 from app.services.update_reservation_service import Update_reservation
 from app.services.read_user_service import Get_users
+from app.services.logout_service import User_logout
 from flask_login import login_required
 
 
@@ -15,6 +16,12 @@ def register_routes(app):
         data = request.get_json()
         current_login = UserLogin(data)
         return current_login
+
+    @app.route("/logout", methods=["POST"])
+    @login_required
+    def Logout():
+        logout = User_logout()
+        return logout
 
     @app.route("/users", methods=["POST"])
     @login_required
