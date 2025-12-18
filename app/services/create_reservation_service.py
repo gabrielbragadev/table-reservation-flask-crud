@@ -5,39 +5,54 @@ from datetime import datetime
 
 
 def CreateReservation(data):
-    data["booking_date"] = datetime.strptime(data["booking_date"], "%Y-%m-%d").date()
-    data["initial_time"] = datetime.strptime(data["initial_time"], "%H:%M:%S").time()
-    data["final_time"] = datetime.strptime(data["final_time"], "%H:%M:%S").time()
+
+    client_name = data.get("client_name")
+    table_number = data.get("table_number")
+    booking_date = data.get("booking_date")
+    initial_time = data.get("initial_time")
+    final_time = data.get("final_time")
+
+    booking_date = datetime.strptime(booking_date, "%Y-%m-%d").date()
+    initial_time = datetime.strptime(initial_time, "%H:%M:%S").time()
+    final_time = datetime.strptime(final_time, "%H:%M:%S").time()
 
     if (
-        data.get("client_name")
-        and data.get("table_number")
-        and data.get("booking_date")
-        and data.get("initial_time")
-        and data.get("final_time")
+        not client_name
+        or not table_number
+        or not booking_date
+        or not initial_time
+        or not final_time
     ):
+        return jsonify({"message": "Os dados não foram totalmente preenchidos"}), 400
 
-        reservation_filter_by = Reservation.query.filter_by(
-            table_number=data["table_number"],
-            booking_date=data["booking_date"],
-            initial_time=data["initial_time"],
-            final_time=data["final_time"],
-        ).all()
+    if initial_time > final_time:
+        return (
+            jsonify(
+                {"message": "Horário de ínicio não pode ser maior que o horário final."}
+            )
+        ), 409
 
-        for r in reservation_filter_by:
-            if not (
-                data["final_time"] <= r.initial_time
-                and data["initial_time"] >= r.final_time
-            ):
-                return jsonify(
-                    {
-                        "message": f"Já existe reserva agendada para o dia {data["booking_date"]} as {data["initial_time"]}"
-                    },
-                    409,
-                )
+    reservation_filter_by = Reservation.query.filter_by(
+        table_number=table_number,
+        booking_date=booking_date,
+        initial_time=initial_time,
+        final_time=final_time,
+    ).all()
 
-        reservation = Reservation(**data)
-        db.session.add(reservation)
-        db.session.commit()
-        return jsonify({"message": "Reserva cadastrada com sucesso"}), 201
-    return jsonify({"message": "Os dados não foram totalmente preenchidos"}), 400
+    for r in reservation_filter_by:
+
+        if final_time <= r.initial_time or initial_time >= final_time:
+
+            reservation = Reservation(
+                client_name=client_name,
+                table_number=table_number,
+                booking_date=booking_date,
+                initial_time=initial_time,
+                final_time=final_time,
+            )
+
+            db.session.add(reservation)
+            db.session.commit()
+            return jsonify("message", "Reserva Realizada Com Sucesso")
+
+    return jsonify({"message": "Já existe reserva agendada para esse horario!"}), 409
