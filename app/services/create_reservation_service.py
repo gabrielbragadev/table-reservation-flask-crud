@@ -32,6 +32,20 @@ def CreateReservation(data):
             )
         ), 409
 
+    all_reservations = Reservation.query.all()
+    if not all_reservations:
+        reservation = Reservation(
+            client_name=client_name,
+            table_number=table_number,
+            booking_date=booking_date,
+            initial_time=initial_time,
+            final_time=final_time,
+        )
+
+        db.session.add(reservation)
+        db.session.commit()
+        return jsonify({"message": "Reserva Realizada Com Sucesso"})
+
     reservation_filter_by = Reservation.query.filter_by(
         table_number=table_number,
         booking_date=booking_date,
