@@ -1,6 +1,5 @@
 from flask import jsonify
 from app.models.reservation import Reservation
-from app.extensions import db
 
 
 def Get_reservations():
@@ -10,7 +9,7 @@ def Get_reservations():
             "id": r.id,
             "client_name": r.client_name,
             "table_number": r.table_number,
-            "booking_date": r.booking_date.isoformat(),
+            "booking_date": r.booking_date,
             "initial_time": r.initial_time.isoformat(),
             "final_time": r.final_time.isoformat(),
         }
