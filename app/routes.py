@@ -7,10 +7,12 @@ from app.services.Reservation.delete_reservation_service import Delete_reservati
 from app.services.Reservation.update_reservation_service import Update_reservation
 from app.services.User.read_user_service import Get_users
 from app.services.Auth.logout_service import User_logout
+from app.services.Table.create_table_service import Create_table_service
 from app.schemas.User.user_create_schema import UserCreateSchema
 from app.schemas.User.user_login_schema import UserLoginSchema
 from app.schemas.Reservation.reservation_create_schema import ReservationCreateSchema
 from app.schemas.Reservation.reservation_update_schema import ReservationUpdateSchema
+from app.schemas.Table.create_table_schema import CreateTableSchema
 from flask_login import login_required
 
 
@@ -64,3 +66,10 @@ def register_routes(app):
         data = ReservationUpdateSchema().load(request.get_json())
         reservation_edit = Update_reservation(data, id)
         return reservation_edit
+
+    @app.route("/tables/create", methods=["POST"])
+    @login_required
+    def Table_create():
+        data = CreateTableSchema().load(request.get_json())
+        table_create = Create_table_service(data)
+        return table_create

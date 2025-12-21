@@ -1,4 +1,4 @@
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, validate
 from marshmallow.validate import Length
 
 
@@ -8,17 +8,8 @@ class ReservationUpdateSchema(Schema):
             min=1, error="Nome do Cliente não pode conter espaços em branco"
         )
     )
-    table_number = fields.Integer(
-        validate=Length(min=1, error="Número da mesa não pode conter espaços em branco")
-    )
-    booking_date = fields.Date(
-        validate=Length(
-            min=1, error="Data da reserva não pode conter espaços em branco"
-        )
-    )
-    initial_time = fields.Time(
-        validate=Length(min=1, error="Hora de ínicio não pode conter espaços em branco")
-    )
-    final_time = fields.Time(
-        validate=Length(min=1, error="Hora de fim não pode conter espaços em branco")
-    )
+    people_quantity = fields.Integer()
+    table_number = fields.Integer()
+    booking_date = fields.Date()
+    initial_time = fields.Time()
+    final_time = fields.Time()

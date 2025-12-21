@@ -6,6 +6,7 @@ from app.extensions import db
 def CreateReservation(data):
 
     client_name = data.get("client_name")
+    people_quantity = data.get("people_quantity")
     table_number = data.get("table_number")
     booking_date = data.get("booking_date")
     initial_time = data.get("initial_time")
@@ -15,6 +16,7 @@ def CreateReservation(data):
     if not all_reservations:
         reservation = Reservation(
             client_name=client_name,
+            people_quantity=people_quantity,
             table_number=table_number,
             booking_date=booking_date,
             initial_time=initial_time,
@@ -36,9 +38,17 @@ def CreateReservation(data):
                 jsonify({"message": "Já existe reserva agendada para esse horario!"}),
                 409,
             )
+        if people_quantity > r.table.people_capacity:
+            return (
+                jsonify(
+                    {"message": "Quantidade de pessoas acima da capacidade da mesa"}
+                ),
+                409,
+            )
 
     reservation = Reservation(
         client_name=client_name,
+        people_quantity=people_quantity,
         table_number=table_number,
         booking_date=booking_date,
         initial_time=initial_time,

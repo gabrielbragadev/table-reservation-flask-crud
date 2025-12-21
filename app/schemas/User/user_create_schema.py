@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 from marshmallow.validate import Length
 
 
@@ -26,5 +26,15 @@ class UserCreateSchema(Schema):
         error_messages={
             "required": "Senha é obrigatória",
             "null": "Senha não pode ser nula",
+        },
+    )
+    role = fields.Str(
+        required=True,
+        validate=validate.OneOf(
+            ["admin", "user"], error="O Cargo deve ser admin ou user"
+        ),
+        error_messages={
+            "required": "Cargo é obrigatória",
+            "null": "Cargo não pode ser nula",
         },
     )

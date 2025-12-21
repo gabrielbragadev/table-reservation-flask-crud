@@ -14,11 +14,18 @@ class ReservationCreateSchema(Schema):
             "null": "Nome não pode ser null",
         },
     )
-    table_number = fields.Integer(
+    people_quantity = fields.Integer(
         required=True,
         validate=validate.Range(
-            min=1, max=60, error="Essa mesa não existe, digite um número de 1 a 60"
+            min=1, max=6, error="Não há mesas para essa quantidade de pessoas"
         ),
+        error_messages={
+            "required": "Quantidade de pessoas é obrigatória",
+            "null": "Quantidade de pessoas não pode ser null",
+        },
+    )
+    table_number = fields.Integer(
+        required=True,
         error_messages={
             "required": "Número da mesa é obrigatório",
             "null": "Número da mesa não pode ser null",

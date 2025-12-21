@@ -2,6 +2,8 @@ from flask import Flask
 from .config import Config
 from .extensions import db, login_manager
 from .models.user import User
+from .models.table import Table
+from .models.reservation import Reservation
 from app.errors import register_error_handlers
 
 
