@@ -4,7 +4,7 @@ from app.extensions import db
 from app.models.reservation import Reservation
 
 
-def CreateReservation(data):
+def create_reservation_service(data):
 
     client_name = data.get("client_name")
     people_quantity = data.get("people_quantity")

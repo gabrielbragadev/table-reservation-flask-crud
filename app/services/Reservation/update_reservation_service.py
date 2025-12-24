@@ -6,7 +6,7 @@ from ...extensions import db
 from ...models.reservation import Reservation
 
 
-def Update_reservation(data, id):
+def update_reservation_service(data, id):
     table_number = data.get("table_number")
     people_quantity = data.get("people_quantity")
     booking_date = data.get("booking_date")
@@ -33,15 +33,11 @@ def Update_reservation(data, id):
                 ),
                 409,
             )
-    if table_number:
+            
         reservation.table_number = table_number
-    if people_quantity:
         reservation.people_quantity = people_quantity
-    if booking_date:
         reservation.booking_date = booking_date
-    if initial_time:
         reservation.initial_time = initial_time
-    if final_time:
         reservation.final_time = final_time
 
     db.session.commit()

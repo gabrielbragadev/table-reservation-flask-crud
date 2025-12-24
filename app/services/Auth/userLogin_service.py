@@ -6,7 +6,7 @@ from app.extensions import db
 from app.models.user import User
 
 
-def UserLogin(data):
+def user_login_service(data):
     username = data.get("username")
     password = str.encode(data.get("password"))
     user = User.query.filter_by(username=username).first()

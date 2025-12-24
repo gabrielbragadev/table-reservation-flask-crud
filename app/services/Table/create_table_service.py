@@ -4,7 +4,7 @@ from app.extensions import db
 from app.models.table import Table
 
 
-def Create_table_service(data):
+def create_table_service(data):
     table_number = data.get("table_number")
     people_capacity = data.get("people_capacity")
 

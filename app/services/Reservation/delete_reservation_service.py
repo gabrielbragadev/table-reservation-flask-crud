@@ -4,7 +4,7 @@ from ...extensions import db
 from ...models.reservation import Reservation
 
 
-def Delete_reservation(id):
+def delete_reservation_service(id):
     reservation = Reservation.query.filter_by(id=id).first()
     if reservation == None:
         return jsonify({"message": "Reserva não encontrada"}), 404

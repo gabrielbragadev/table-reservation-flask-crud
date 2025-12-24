@@ -15,3 +15,14 @@ class Reservation(db.Model):
     final_time = db.Column(db.Time, nullable=False)
 
     table = db.relationship("Table", back_populates="reservations")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "client_name": self.client_name,
+            "people_quantity": self.people_quantity,
+            "table_number": self.table_number,
+            "booking_date": self.booking_date,
+            "initial_time": self.initial_time.isoformat(),
+            "final_time": self.final_time.isoformat(),
+        }

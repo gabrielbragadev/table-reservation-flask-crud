@@ -6,71 +6,84 @@ from app.schemas.Reservation.reservation_update_schema import ReservationUpdateS
 from app.schemas.Table.create_table_schema import CreateTableSchema
 from app.schemas.User.user_create_schema import UserCreateSchema
 from app.schemas.User.user_login_schema import UserLoginSchema
-from app.services.Auth.logout_service import User_logout
-from app.services.Auth.userLogin_service import UserLogin
-from app.services.Reservation.create_reservation_service import CreateReservation
-from app.services.Reservation.delete_reservation_service import Delete_reservation
-from app.services.Reservation.read_reservations_service import Get_reservations
-from app.services.Reservation.update_reservation_service import Update_reservation
-from app.services.Table.create_table_service import Create_table_service
-from app.services.User.create_user_service import CreateUser
-from app.services.User.read_user_service import Get_users
+from app.services.Auth.logout_service import user_logout_service
+from app.services.Auth.userLogin_service import user_login_service
+from app.services.Reservation.create_reservation_service import (
+    create_reservation_service,
+)
+from app.services.Reservation.delete_reservation_service import (
+    delete_reservation_service,
+)
+from app.services.Reservation.read_reservations_service import get_reservations_service
+from app.services.Reservation.read_reservation_service import get_reservation_service
+from app.services.Reservation.update_reservation_service import (
+    update_reservation_service,
+)
+from app.services.Table.create_table_service import create_table_service
+from app.services.User.create_user_service import create_user_service
+from app.services.User.read_user_service import get_users_service
 
 
 def register_routes(app):
     @app.route("/login", methods=["POST"])
     def login():
         data = UserLoginSchema().load(request.get_json())
-        current_login = UserLogin(data)
+        current_login = user_login_service(data)
         return current_login
 
     @app.route("/logout", methods=["POST"])
     @login_required
     def logout():
-        logout = User_logout()
+        logout = user_logout_service()
         return logout
 
     @app.route("/users", methods=["POST"])
     def user_create():
         data = UserCreateSchema().load(request.get_json())
-        new_user = CreateUser(data)
+        new_user = create_user_service(data)
         return new_user
 
     @app.route("/users", methods=["GET"])
     @login_required
     def user_read():
-        read_users = Get_users()
+        read_users = get_users_service()
         return read_users
 
     @app.route("/reservations/create", methods=["POST"])
     @login_required
     def reservation_create():
         data = ReservationCreateSchema().load(request.get_json())
-        new_reservation = CreateReservation(data)
+        new_reservation = create_reservation_service(data)
         return new_reservation
 
     @app.route("/reservations/", methods=["GET"])
     @login_required
     def reservations_read():
-        read_reservations = Get_reservations()
+        read_reservations = get_reservations_service()
         return read_reservations
+
+    @app.route("/reservations/<int:reservation_id>", methods=["GET"])
+    @login_required
+    def reservation_read(reservation_id):
+        read_reservation = get_reservation_service(reservation_id)
+        return read_reservation
 
     @app.route("/reservations/cancellation/<int:reservation_id>", methods=["DELETE"])
     @login_required
     def reservation_cancellation(reservation_id):
-        delete_reservation = Delete_reservation(reservation_id)
+        delete_reservation = delete_reservation_service(reservation_id)
         return delete_reservation
 
     @app.route("/reservations/edit/<int:reservation_id>", methods=["PUT"])
     @login_required
     def reservation_edit(reservation_id):
         data = ReservationUpdateSchema().load(request.get_json())
-        reservation_edit = Update_reservation(data, reservation_id)
+        reservation_edit = update_reservation_service(data, reservation_id)
         return reservation_edit
 
     @app.route("/tables/create", methods=["POST"])
     @login_required
     def table_create():
         data = CreateTableSchema().load(request.get_json())
-        table_create = Create_table_service(data)
+        table_create = create_table_service(data)
         return table_create

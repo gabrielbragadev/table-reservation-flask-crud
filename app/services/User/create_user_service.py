@@ -6,7 +6,7 @@ from app.extensions import db
 from app.models.user import User
 
 
-def CreateUser(data):
+def create_user_service(data):
     username = data.get("username")
     password = str.encode(data.get("password"))
     email = data.get("email")
