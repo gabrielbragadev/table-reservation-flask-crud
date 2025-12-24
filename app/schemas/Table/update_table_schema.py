@@ -3,12 +3,9 @@ from marshmallow import Schema, ValidationError, fields, validate, validates_sch
 MESA_COM_MAIOR_CAPACIDADE = 6
 
 
-class CreateTableSchema(Schema):
-    id = fields.Integer(dump_only=True)
+class UpdateTableSchema(Schema):
     table_number = fields.Integer(
-        required=True,
         error_messages={
-            "required": "Número da mesa é obrigatório",
             "null": "Número da mesa não pode ser null",
         },
     )
@@ -17,8 +14,11 @@ class CreateTableSchema(Schema):
         validate=validate.Range(
             min=1,
             max=MESA_COM_MAIOR_CAPACIDADE,
-            error=f"Capacidade da mesa ultrapassa quantidade máxima que é {MESA_COM_MAIOR_CAPACIDADE}",
+            error="Capacidade da mesa ultrapassa quantidade máxima que é 6",
         ),
+        error_messages={
+            "null": "Número da mesa não pode ser null",
+        },
     )
 
     @validates_schema

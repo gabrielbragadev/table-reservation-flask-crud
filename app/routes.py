@@ -4,6 +4,7 @@ from flask_login import login_required
 from app.schemas.Reservation.reservation_create_schema import ReservationCreateSchema
 from app.schemas.Reservation.reservation_update_schema import ReservationUpdateSchema
 from app.schemas.Table.create_table_schema import CreateTableSchema
+from app.schemas.Table.update_table_schema import UpdateTableSchema
 from app.schemas.User.user_create_schema import UserCreateSchema
 from app.schemas.User.user_login_schema import UserLoginSchema
 from app.services.Auth.logout_service import user_logout_service
@@ -23,6 +24,7 @@ from app.services.Table.create_table_service import create_table_service
 from app.services.Table.read_tables_service import get_tables_service
 from app.services.Table.read_table_service import get_table_service
 from app.services.Table.delete_table_service import delete_table_service
+from app.services.Table.update_table_service import update_table
 from app.services.User.create_user_service import create_user_service
 from app.services.User.read_user_service import get_users_service
 
@@ -102,10 +104,16 @@ def register_routes(app):
     def table_read(table_id):
         table_read = get_table_service(table_id)
         return table_read
-    
+
     @app.route("/tables/delete/<int:table_id>", methods=["DELETE"])
     @login_required
     def table_delete(table_id):
         table_delete = delete_table_service(table_id)
         return table_delete
-    
+
+    @app.route("/tables/edit/<int:table_id>", methods=["PUT"])
+    @login_required
+    def table_update(table_id):
+        data = UpdateTableSchema().load(request.get_json())
+        table_update = update_table(data, table_id)
+        return table_update
