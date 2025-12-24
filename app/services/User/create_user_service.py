@@ -28,13 +28,13 @@ def create_user_service(data):
             )
         ), 401
 
-    conflict_checker_query = User.query.filter_by(id=current_user.id).first()
+    authenticated_user = User.query.filter_by(id=current_user.id).first()
 
-    if conflict_checker_query.role == "user":
+    if authenticated_user.role == "user":
         return (
             jsonify(
                 {
-                    "messsage": "Seu usuário não tem permissão para cadastrar outros usuários."
+                    "messsage": "Usuário não autorizado"
                 }
             )
         ), 401

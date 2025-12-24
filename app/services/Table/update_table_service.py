@@ -1,9 +1,15 @@
 from flask import jsonify
+from flask_login import current_user
 from app.extensions import db
 from app.models.table import Table
+from app.models.user import User
 
 
 def update_table(data, table_id):
+
+    authenticated_user = User.query.filter_by(id=current_user.id).first()
+    if authenticated_user.role == "user":
+        return jsonify({"message": "Usuário não autorizado"})
 
     table_number = data.get("table_number")
     people_capacity = data.get("people_capacity")
