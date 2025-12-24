@@ -1,8 +1,9 @@
-from app.models.user import User
-from app.extensions import db
-from flask import jsonify
-from flask_login import login_user, current_user
 import bcrypt
+from flask import jsonify
+from flask_login import current_user, login_user
+
+from app.extensions import db
+from app.models.user import User
 
 
 def UserLogin(data):

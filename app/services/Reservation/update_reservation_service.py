@@ -1,7 +1,9 @@
-from ...models.reservation import Reservation
-from flask import request, jsonify
-from ...extensions import db
 from datetime import datetime
+
+from flask import jsonify, request
+
+from ...extensions import db
+from ...models.reservation import Reservation
 
 
 def Update_reservation(data, id):

@@ -1,5 +1,5 @@
-from flask_login import current_user, logout_user
 from flask import jsonify
+from flask_login import current_user, logout_user
 
 
 def User_logout():

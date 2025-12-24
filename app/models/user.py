@@ -1,5 +1,6 @@
-from app.extensions import db
 from flask_login import UserMixin
+
+from app.extensions import db
 
 
 class User(db.Model, UserMixin):

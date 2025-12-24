@@ -1,6 +1,7 @@
-from app.models.table import Table
-from app.extensions import db
 from flask import jsonify
+
+from app.extensions import db
+from app.models.table import Table
 
 
 def Create_table_service(data):

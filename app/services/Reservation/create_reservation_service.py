@@ -1,6 +1,7 @@
 from flask import jsonify
-from app.models.reservation import Reservation
+
 from app.extensions import db
+from app.models.reservation import Reservation
 
 
 def CreateReservation(data):

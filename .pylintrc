@@ -1,0 +1,21 @@
+[MASTER]
+ignore=.venv,__pycache__,migrations
+py-version=3.12
+jobs=1
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    too-many-arguments
+
+[FORMAT]
+max-line-length=88
+
+[BASIC]
+variable-naming-style=snake_case
+function-naming-style=snake_case
+class-naming-style=PascalCase
+const-naming-style=UPPER_CASE
