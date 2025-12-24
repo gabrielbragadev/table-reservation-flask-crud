@@ -11,3 +11,10 @@ class Table(db.Model):
     people_capacity = db.Column(db.Integer, nullable=False)
 
     reservations = db.relationship("Reservation", back_populates="table")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "table_number": self.table_number,
+            "people_capacity": self.people_capacity,
+        }

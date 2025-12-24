@@ -20,6 +20,7 @@ from app.services.Reservation.update_reservation_service import (
     update_reservation_service,
 )
 from app.services.Table.create_table_service import create_table_service
+from app.services.Table.read_tables_service import get_tables_service
 from app.services.User.create_user_service import create_user_service
 from app.services.User.read_user_service import get_users_service
 
@@ -87,3 +88,9 @@ def register_routes(app):
         data = CreateTableSchema().load(request.get_json())
         table_create = create_table_service(data)
         return table_create
+
+    @app.route("/tables", methods=["GET"])
+    @login_required
+    def tables_read():
+        tables_read = get_tables_service()
+        return tables_read
