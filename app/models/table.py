@@ -9,6 +9,7 @@ class Table(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     table_number = db.Column(db.Integer, unique=True, nullable=False)
     people_capacity = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="Available")
 
     reservations = db.relationship("Reservation", back_populates="table")
 

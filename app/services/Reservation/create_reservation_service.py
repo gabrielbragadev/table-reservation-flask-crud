@@ -1,7 +1,11 @@
+from datetime import date, datetime
+
 from flask import jsonify
 
 from app.extensions import db
 from app.models.reservation import Reservation
+from app.models.table import Table
+from app.services.Global.calculate_status_service import calculate_status
 
 
 def create_reservation_service(data):
@@ -14,15 +18,19 @@ def create_reservation_service(data):
     final_time = data.get("final_time")
 
     all_reservations = Reservation.query.all()
+    table = Table.query.filter_by(table_number=table_number).first()
+
     if not all_reservations:
         reservation = Reservation(
             client_name=client_name,
             people_quantity=people_quantity,
-            table_number=table_number,
+            table_number=table.table_number,
             booking_date=booking_date,
             initial_time=initial_time,
             final_time=final_time,
         )
+
+        table.status = calculate_status(booking_date, initial_time)
 
         db.session.add(reservation)
         db.session.commit()
@@ -50,11 +58,13 @@ def create_reservation_service(data):
     reservation = Reservation(
         client_name=client_name,
         people_quantity=people_quantity,
-        table_number=table_number,
+        table_number=table.table_number,
         booking_date=booking_date,
         initial_time=initial_time,
         final_time=final_time,
     )
+
+    table.status = calculate_status(booking_date, initial_time)
 
     db.session.add(reservation)
     db.session.commit()

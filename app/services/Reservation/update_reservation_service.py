@@ -2,6 +2,9 @@ from datetime import datetime
 
 from flask import jsonify, request
 
+from app.models.table import Table
+from app.services.Global.calculate_status_service import calculate_status
+
 from ...extensions import db
 from ...models.reservation import Reservation
 
@@ -13,7 +16,16 @@ def update_reservation_service(data, id):
     initial_time = data.get("initial_time")
     final_time = data.get("final_time")
 
+    new_table = Table.query.filter_by(table_number=table_number).first()
+    if not new_table:
+        return jsonify({"message": "Mesa não encontrada"}), 404
+
     reservation = Reservation.query.filter_by(id=id).first()
+    if not reservation:
+        return jsonify({"message": "Reserva não encontrada"}), 404
+
+    old_table = Table.query.filter_by(table_number=reservation.table_number).first()
+
     reservation_filter_by = Reservation.query.filter_by(
         table_number=table_number, booking_date=booking_date
     ).all()
@@ -26,19 +38,30 @@ def update_reservation_service(data, id):
                 409,
             )
 
-        if people_quantity and people_quantity > r.table.people_capacity:
+        if people_quantity and people_quantity > r.new_table.people_capacity:
             return (
                 jsonify(
                     {"message": "Quantidade de pessoas acima da capacidade da mesa"}
                 ),
                 409,
             )
-            
-        reservation.table_number = table_number
-        reservation.people_quantity = people_quantity
-        reservation.booking_date = booking_date
-        reservation.initial_time = initial_time
-        reservation.final_time = final_time
+
+    if people_quantity > new_table.people_capacity:
+        return (
+            jsonify({"message": "Quantidade de pessoas acima da capacidade da mesa"}),
+            409,
+        )
+
+    if old_table.status == "Reserved":
+        old_table.status = "Available"
+
+    reservation.table_number = new_table.table_number
+    reservation.people_quantity = people_quantity
+    reservation.booking_date = booking_date
+    reservation.initial_time = initial_time
+    reservation.final_time = final_time
+
+    new_table.status = calculate_status(booking_date, initial_time)
 
     db.session.commit()
     return jsonify({"message": "Reserva Atualizada Com Sucesso"})
