@@ -26,7 +26,8 @@ from app.services.Table.read_table_service import get_table_service
 from app.services.Table.delete_table_service import delete_table_service
 from app.services.Table.update_table_service import update_table
 from app.services.User.create_user_service import create_user_service
-from app.services.User.read_user_service import get_users_service
+from app.services.User.read_users_service import get_users_service
+from app.services.User.delete_user_service import delete_user
 
 
 def register_routes(app):
@@ -53,6 +54,12 @@ def register_routes(app):
     def user_read():
         read_users = get_users_service()
         return read_users
+    
+    @app.route("/users/delete/<int:user_id>", methods=["DELETE"])
+    @login_required
+    def user_delete(user_id):
+        user_delete = delete_user(user_id)
+        return user_delete
 
     @app.route("/reservations/create", methods=["POST"])
     @login_required

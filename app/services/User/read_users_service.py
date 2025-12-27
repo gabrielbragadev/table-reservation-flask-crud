@@ -12,8 +12,11 @@ def get_users_service():
 
     users = User.query.all()
 
-    if not users:
+    if users is None:
         return jsonify({"message": "Registros não encontrados"})
 
-    response = [{"id": u.id, "username": u.username, "email": u.email, "role": u.role} for u in users]
+    response = [
+        {"id": u.id, "username": u.username, "email": u.email, "role": u.role}
+        for u in users
+    ]
     return jsonify(response)
