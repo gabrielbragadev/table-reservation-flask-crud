@@ -28,9 +28,11 @@ def update_table(data, table_id):
 
     if not table:
         return jsonify({"message": "Registro não encontrado"}), 404
-
-    table.table_number = table_number
-    table.people_capacity = people_capacity
+    
+    if table_number:
+        table.table_number = table_number
+    if people_capacity:    
+        table.people_capacity = people_capacity
 
     db.session.commit()
 

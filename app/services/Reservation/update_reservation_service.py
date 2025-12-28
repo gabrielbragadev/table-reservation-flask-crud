@@ -55,11 +55,16 @@ def update_reservation_service(data, id):
     if old_table.status == "Reserved":
         old_table.status = "Available"
 
-    reservation.table_number = new_table.table_number
-    reservation.people_quantity = people_quantity
-    reservation.booking_date = booking_date
-    reservation.initial_time = initial_time
-    reservation.final_time = final_time
+    if table_number:
+        reservation.table_number = new_table.table_number
+    if people_quantity:
+        reservation.people_quantity = people_quantity
+    if booking_date:
+        reservation.booking_date = booking_date
+    if initial_time:
+        reservation.initial_time = initial_time
+    if final_time:    
+        reservation.final_time = final_time
 
     new_table.status = calculate_status(booking_date, initial_time)
 

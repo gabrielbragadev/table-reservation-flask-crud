@@ -6,6 +6,7 @@ from app.schemas.Reservation.reservation_update_schema import ReservationUpdateS
 from app.schemas.Table.create_table_schema import CreateTableSchema
 from app.schemas.Table.update_table_schema import UpdateTableSchema
 from app.schemas.User.user_create_schema import UserCreateSchema
+from app.schemas.User.user_update_schema import UserUpdateSchema
 from app.schemas.User.user_login_schema import UserLoginSchema
 from app.services.Auth.logout_service import user_logout_service
 from app.services.Auth.userLogin_service import user_login_service
@@ -28,6 +29,7 @@ from app.services.Table.update_table_service import update_table
 from app.services.User.create_user_service import create_user_service
 from app.services.User.read_users_service import get_users_service
 from app.services.User.delete_user_service import delete_user
+from app.services.User.update_user_service import update_user
 
 
 def register_routes(app):
@@ -54,12 +56,19 @@ def register_routes(app):
     def user_read():
         read_users = get_users_service()
         return read_users
-    
+
     @app.route("/users/delete/<int:user_id>", methods=["DELETE"])
     @login_required
     def user_delete(user_id):
         user_delete = delete_user(user_id)
         return user_delete
+
+    @app.route("/users/edit/<int:user_id>", methods=["PUT"])
+    @login_required
+    def user_update(user_id):
+        data = UserUpdateSchema().load(request.get_json())
+        user_update = update_user(data, user_id)
+        return user_update
 
     @app.route("/reservations/create", methods=["POST"])
     @login_required
