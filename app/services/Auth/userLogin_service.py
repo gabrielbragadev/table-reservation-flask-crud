@@ -1,5 +1,5 @@
 import bcrypt
-from flask import jsonify
+from flask import abort, jsonify
 from flask_login import current_user, login_user
 
 from app.extensions import db
@@ -13,4 +13,4 @@ def user_login_service(data):
     if user and bcrypt.checkpw(password, str.encode(user.password)):
         login_user(user)
         return jsonify({"message": "Autenticação Feita Com Sucesso"}), 200
-    return jsonify({"message": "Credenciais Inválidas"}), 401
+    abort(401, description="Credenciais Inválidas")

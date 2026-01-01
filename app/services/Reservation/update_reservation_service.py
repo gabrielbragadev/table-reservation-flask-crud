@@ -1,12 +1,11 @@
 from datetime import datetime
+from flask import abort, jsonify
 
-from flask import jsonify, request
-
+from app.exceptions import ConflictError
 from app.models.table import Table
 from app.services.Global.calculate_status_service import calculate_status
-
-from ...extensions import db
-from ...models.reservation import Reservation
+from app.extensions import db
+from app.models.reservation import Reservation
 
 
 def update_reservation_service(data, id):
@@ -18,11 +17,11 @@ def update_reservation_service(data, id):
 
     new_table = Table.query.filter_by(table_number=table_number).first()
     if not new_table:
-        return jsonify({"message": "Mesa não encontrada"}), 404
+        abort(404, description="Mesa não encontrada")
 
     reservation = Reservation.query.filter_by(id=id).first()
     if not reservation:
-        return jsonify({"message": "Reserva não encontrada"}), 404
+        abort(404, description="Reserva não encontrada")
 
     old_table = Table.query.filter_by(table_number=reservation.table_number).first()
 
@@ -33,24 +32,10 @@ def update_reservation_service(data, id):
     for r in reservation_filter_by:
 
         if not (final_time <= r.initial_time or initial_time >= r.final_time):
-            return (
-                jsonify({"message": "Já existe reserva agendada para esse horario!"}),
-                409,
-            )
+            raise ConflictError(message="Já existe reserva agendada para esse horário")
 
-        if people_quantity and people_quantity > r.new_table.people_capacity:
-            return (
-                jsonify(
-                    {"message": "Quantidade de pessoas acima da capacidade da mesa"}
-                ),
-                409,
-            )
-
-    if people_quantity > new_table.people_capacity:
-        return (
-            jsonify({"message": "Quantidade de pessoas acima da capacidade da mesa"}),
-            409,
-        )
+        if people_quantity and people_quantity > new_table.people_capacity:
+            raise ConflictError("Quantidade de pessoas acima da capacidade da mesa")
 
     if old_table.status == "Reserved":
         old_table.status = "Available"
@@ -63,7 +48,7 @@ def update_reservation_service(data, id):
         reservation.booking_date = booking_date
     if initial_time:
         reservation.initial_time = initial_time
-    if final_time:    
+    if final_time:
         reservation.final_time = final_time
 
     new_table.status = calculate_status(booking_date, initial_time)

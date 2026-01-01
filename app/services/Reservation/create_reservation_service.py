@@ -1,7 +1,8 @@
 from datetime import date, datetime
 
-from flask import jsonify
+from flask import abort, jsonify
 
+from app.exceptions import ConflictError
 from app.extensions import db
 from app.models.reservation import Reservation
 from app.models.table import Table
@@ -20,7 +21,7 @@ def create_reservation_service(data):
     all_reservations = Reservation.query.all()
     table = Table.query.filter_by(table_number=table_number).first()
 
-    if not all_reservations:
+    if all_reservations is None:
         reservation = Reservation(
             client_name=client_name,
             people_quantity=people_quantity,
@@ -35,6 +36,10 @@ def create_reservation_service(data):
         db.session.add(reservation)
         db.session.commit()
         return jsonify({"message": "Reserva Realizada Com Sucesso"})
+    
+    
+    if table is None:
+        abort(404, description="Mesa não encontrada")
 
     reservation_filter_by = Reservation.query.filter_by(
         table_number=table_number, booking_date=booking_date
@@ -43,16 +48,10 @@ def create_reservation_service(data):
     for r in reservation_filter_by:
 
         if not (final_time <= r.initial_time or initial_time >= r.final_time):
-            return (
-                jsonify({"message": "Já existe reserva agendada para esse horario!"}),
-                409,
-            )
+            raise ConflictError(message="Já existe reserva agendada para esse horario!")
         if people_quantity > r.table.people_capacity:
-            return (
-                jsonify(
-                    {"message": "Quantidade de pessoas acima da capacidade da mesa"}
-                ),
-                409,
+            raise ConflictError(
+                message="Quantidade de pessoas acima da capacidade da mesa!"
             )
 
     reservation = Reservation(

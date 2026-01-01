@@ -1,8 +1,9 @@
 import bcrypt
 
-from flask import jsonify
+from flask import abort, jsonify
 from flask_login import current_user
 
+from app.exceptions import ConflictError
 from app.extensions import db
 from app.models.user import User
 
@@ -25,22 +26,15 @@ def update_user(data, user_id):
 
     user_to_be_changed = User.query.filter_by(id=user_id).first()
 
-    if user_identical_usernames:
-        return jsonify({"message": "Nome de usuário já existe"}), 409
-
-    if user_identical_emails:
-        return jsonify({"message": "E-mail já existe"}), 409
-
     if authenticated_user.role == "user":
         if user_id != current_user.id:
-            return (
-                jsonify(
-                    {
-                        "message": "Permissão negada: só é possível alterar seu próprio usuário."
-                    }
-                ),
-                401,
-            )
+            abort(403)
+
+    if user_identical_usernames:
+        raise ConflictError("Nome de usuário já existe")
+
+    if user_identical_emails:
+        raise ConflictError("E-mail já existe")
 
         if username:
             authenticated_user.username = username
@@ -54,7 +48,7 @@ def update_user(data, user_id):
         return jsonify({"message": "Registro alterado com sucesso"})
 
     if user_to_be_changed is None:
-        return jsonify({"message": "Registro não encontrado"}), 404
+        abort(404)
 
     if username:
         user_to_be_changed.username = username

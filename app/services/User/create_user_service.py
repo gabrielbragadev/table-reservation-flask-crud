@@ -1,5 +1,5 @@
 import bcrypt
-from flask import jsonify
+from flask import abort, jsonify
 from flask_login import current_user
 
 from app.extensions import db
@@ -22,22 +22,12 @@ def create_user_service(data):
         return jsonify({"message": "Usuário cadastrado com sucesso"}), 201
 
     if not current_user.is_authenticated:
-        return (
-            jsonify(
-                {"messsage": "É preciso estar autenticado para realizar essa ação!"}
-            )
-        ), 401
+        abort(401, description="Sessão inválida ou expirada. Faça login novamente.")
 
     authenticated_user = User.query.filter_by(id=current_user.id).first()
 
     if authenticated_user.role == "user":
-        return (
-            jsonify(
-                {
-                    "messsage": "Usuário não autorizado"
-                }
-            )
-        ), 401
+        abort(403)
 
     user = User(username=username, password=hashed, email=email, role=role)
     db.session.add(user)

@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import abort, jsonify
 from flask_login import current_user
 
 from app.extensions import db
@@ -10,20 +10,16 @@ def delete_user(user_id):
     authenticated_user = User.query.filter_by(id=current_user.id).first()
 
     if current_user.id == user_id:
-        return (
-            jsonify(
-                {
-                    "message": "Você não pode excluir seu próprio usuário enquanto estiver logado"
-                }
-            ),
-            401,
+        abort(
+            403,
+            description="Você não pode excluir seu próprio usuário enquanto estiver logado",
         )
 
     if authenticated_user.role == "user":
-        return (jsonify({"messsage": "Usuário não autorizado"})), 401
+        abort(403)
 
     if user is None:
-        return jsonify({"message": "Registro não encontrado"}), 404
+        abort(404)
 
     db.session.delete(user)
     db.session.commit()
