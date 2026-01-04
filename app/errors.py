@@ -1,4 +1,4 @@
-from app.exceptions import ConflictError
+from app.exceptions import ConflictError, UnauthorizedError
 from flask import jsonify
 from marshmallow import ValidationError
 
@@ -18,17 +18,14 @@ def register_error_handlers(app):
             400,
         )
 
-    @app.errorhandler(401)
-    def handle_401(err):
-        return (
-            jsonify(
-                {
-                    "error": "unauthorized",
-                    "message": getattr(err, "description", "Não autorizado"),
-                }
-            ),
-            401,
+    @app.errorhandler(UnauthorizedError)
+    def unauthorized_error(err):
+        message = (
+            (err.description)
+            if hasattr(err, "description")
+            else getattr(err, "message", "Não autorizado")
         )
+        return jsonify({"error": "unauthorized", "message": message}), 401
 
     @app.errorhandler(403)
     def forbidden_error(err):
