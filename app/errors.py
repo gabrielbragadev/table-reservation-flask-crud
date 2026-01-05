@@ -1,4 +1,4 @@
-from app.exceptions import ConflictError, UnauthorizedError
+from app.exceptions import ConflictError, NotFoundError, UnauthorizedError
 from flask import jsonify
 from marshmallow import ValidationError
 
@@ -31,18 +31,19 @@ def register_error_handlers(app):
     def forbidden_error(err):
         return jsonify({"error": "forbidden", "message": "Você não tem permissão"}), 403
 
-    @app.errorhandler(404)
+    @app.errorhandler(NotFoundError)
     def notfound_error(err):
+        message = (
+            (err.description)
+            if hasattr(err, "description")
+            else getattr(err, "message", "Não encontrado")
+        )
 
         return (
             jsonify(
                 {
                     "error": "not_found",
-                    "message": (
-                        err.description
-                        if hasattr(err, "description")
-                        else "Recurso não encontrado"
-                    ),
+                    "message": message,
                 }
             ),
             404,

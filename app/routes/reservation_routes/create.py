@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from app.exceptions import ConflictError, UnauthorizedError
 from app.services.reservation.create_reservation_service import (
@@ -19,7 +19,7 @@ def create_reservation():
         create_reservation_service(data, user_authenticated)
         return jsonify({"message": "Reserva realizada com sucesso"}), 201
     except ValueError as error:
-        return jsonify({"error": str(error)}), 404
+        return jsonify({"error": str(error.message)}), 404
     except UnauthorizedError as error:
         return jsonify({"error": error.message}), 401
     except ConflictError as error:

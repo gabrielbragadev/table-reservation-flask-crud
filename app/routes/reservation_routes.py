@@ -23,16 +23,6 @@ reservation_bp = Blueprint("reservation_bp", __name__, url_prefix="/reservations
 def register_reservation_routes(app):
     @app.route("/reservations", methods=["POST"])
     @login_required
-    def create_reservation():
-        data = ReservationCreateSchema().load(request.get_json())
-
-        user_authenticated = current_user.is_authenticated if current_user else False
-        
-        try:
-            create_reservation_service(data, user_authenticated)
-        except ValueError as error: 
-            pass
-
     @app.route("/reservations", methods=["GET"])
     @login_required
     def reservations_read():
@@ -48,8 +38,3 @@ def register_reservation_routes(app):
     def reservation_edit(reservation_id):
         data = ReservationUpdateSchema().load(request.get_json())
         return update_reservation_service(data, reservation_id)
-
-    @app.route("/reservations/<int:reservation_id>", methods=["DELETE"])
-    @login_required
-    def reservation_cancellation(reservation_id):
-        return delete_reservation_service(reservation_id)
