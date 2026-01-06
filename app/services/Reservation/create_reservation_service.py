@@ -34,7 +34,7 @@ def create_reservation_service(data: Dict, user_authenticated: bool) -> None:
         final_time=final_time,
     )
 
-    table.status = calculate_status(booking_date, initial_time)
+    table.status = calculate_status(booking_date, initial_time, final_time)
 
     db.session.add(reservation)
     db.session.commit()

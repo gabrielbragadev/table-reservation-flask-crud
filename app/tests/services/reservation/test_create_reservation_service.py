@@ -30,8 +30,8 @@ def test_create_reservation_success(db_session, table):
         "people_quantity": 2,
         "table_number": 1,
         "booking_date": date.today(),
-        "initial_time": time(18, 0),
-        "final_time": time(20, 0),
+        "initial_time": time(21, 0),
+        "final_time": time(22, 0),
     }
 
     create_reservation_service(data, user_authenticated=True)
@@ -43,9 +43,9 @@ def test_create_reservation_success(db_session, table):
     assert reservation.people_quantity == 2
     assert reservation.table_number == 1
     assert reservation.booking_date == date.today()
-    assert reservation.initial_time == time(18, 0)
-    assert reservation.final_time == time(20, 0)
-    assert table.status == "Reserved"
+    assert reservation.initial_time == time(21, 0)
+    assert reservation.final_time == time(22, 0)
+    assert table.status == "Occupied"
 
 
 def test_create_reservation_table_not_found(db_session):
