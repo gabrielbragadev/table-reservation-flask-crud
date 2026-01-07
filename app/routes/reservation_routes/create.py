@@ -10,13 +10,13 @@ from app.routes.reservation_routes import reservations_bp
 
 
 @reservations_bp.route("/", methods=["POST"])
+@login_required
 def create_reservation():
 
     data = ReservationCreateSchema().load(request.get_json())
-    user_authenticated = current_user.is_authenticated if current_user else False
 
     try:
-        create_reservation_service(data, user_authenticated)
+        create_reservation_service(data)
         return jsonify({"message": "Reserva realizada com sucesso"}), 201
     except ValueError as error:
         return jsonify({"error": str(error.message)}), 404

@@ -1,12 +1,12 @@
-from flask import abort, jsonify
+from app.exceptions import NotFoundError
+from app.repositories.reservation_repository import ReservationRepository
 
-from app.models.reservation import Reservation
 
+def get_reservation_service(reservation_id: int) -> dict:
 
-def get_reservation_service(reservation_id):
-
-    reservation = Reservation.query.filter_by(id=reservation_id).first()
+    reservation_repository = ReservationRepository()
+    reservation = reservation_repository.find_by_id(reservation_id)
     if not reservation:
-        abort(404, description="Reserva não encontrada")
+        raise NotFoundError(message="Reserva não encontrada")
 
-    return jsonify(reservation.to_dict())
+    return reservation.to_dict()
