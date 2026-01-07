@@ -18,7 +18,8 @@ from app.services.reservation.delete_reservation_service import (
 )
 
 reservation_bp = Blueprint("reservation_bp", __name__, url_prefix="/reservations")
-
+import flask_login
+flask_login.confirm_login
 
 def register_reservation_routes(app):
     @app.route("/reservations", methods=["POST"])
