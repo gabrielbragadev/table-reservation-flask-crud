@@ -1,7 +1,7 @@
 from datetime import date, time
 from typing import Dict
 
-from app.exceptions import ConflictError, UnauthorizedError
+from app.exceptions import ConflictError
 from app.models.reservation import Reservation
 from app.models.table import Table
 from app.services.global_services.calculate_status_service import calculate_status
@@ -9,7 +9,7 @@ from app.repositories.reservation_repository import ReservationRepository
 from app.repositories.table_repository import TableRepository
 
 
-def create_reservation_service(data: Dict, user_authenticated: bool) -> None:
+def create_reservation_service(data: Dict) -> None:
 
     client_name: str = data.get("client_name")
     people_quantity: int = data.get("people_quantity")

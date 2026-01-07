@@ -10,6 +10,10 @@ class ReservationRepository:
         all_the_reservations = Reservation.query.all()
         return all_the_reservations
 
+    def find_by_id(self, reservation_id: int) -> Reservation:
+        reservation = Reservation.query.filter_by(id=reservation_id).first()
+        return reservation
+
     def find_by_table_and_date(
         self, table_number: int, booking_date: date
     ) -> List[Reservation]:
@@ -20,4 +24,8 @@ class ReservationRepository:
 
     def create(self, reservation: Reservation) -> None:
         db.session.add(reservation)
+        db.session.commit()
+
+    def delete(self, reservation: Reservation) -> None:
+        db.session.delete(reservation)
         db.session.commit()
