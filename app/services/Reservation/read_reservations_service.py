@@ -1,11 +1,14 @@
-from flask import abort, jsonify
+from typing import List
 
-from app.models.reservation import Reservation
+from app.exceptions import NotFoundError
+from app.repositories.reservation_repository import ReservationRepository
 
 
-def get_reservations_service():
-    reservations = Reservation.query.all()
+def get_reservations_service() -> List[dict]:
+    reservation_repository = ReservationRepository()
+    reservations = reservation_repository.find_all()
+
     if not reservations:
-        abort(404, description="Nenhum registro encontrado!")
+        raise NotFoundError(message="Nenhum registro encontrado")
     response = [r.to_dict() for r in reservations]
-    return jsonify(response)
+    return response
