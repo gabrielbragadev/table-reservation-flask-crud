@@ -9,9 +9,14 @@ class Table(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     table_number = db.Column(db.Integer, unique=True, nullable=False)
     people_capacity = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.String(20), nullable=False, default="Available")
 
     reservations = db.relationship("Reservation", back_populates="table")
+
+    @property
+    def status(self) -> str:
+        from app.services.global_services.get_table_status import get_table_status
+
+        return get_table_status(self)
 
     def to_dict(self):
         return {

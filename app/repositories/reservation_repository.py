@@ -29,3 +29,6 @@ class ReservationRepository:
     def delete(self, reservation: Reservation) -> None:
         db.session.delete(reservation)
         db.session.commit()
+
+    def updated(self) -> None:
+        db.session.commit()

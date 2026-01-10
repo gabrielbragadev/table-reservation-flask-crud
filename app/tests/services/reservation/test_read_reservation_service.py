@@ -1,4 +1,4 @@
-# pytest .\app\tests\services\reservation\test_read_reservation_sevice.py -s -v
+# run: pytest .\app\tests\services\reservation\test_read_reservation_service.py -s -v
 
 from datetime import date, time
 import pytest
@@ -19,7 +19,6 @@ def table(db_session):
     table = Table(
         table_number=1,
         people_capacity=4,
-        status="Available",
     )
     db.session.add(table)
     db.session.commit()
@@ -33,32 +32,30 @@ def reservation(db_session, table):
         "people_quantity": 2,
         "table_number": 1,
         "booking_date": date.today(),
-        "initial_time": time(16, 0),
+        "initial_time": time(15, 0),
         "final_time": time(17, 0),
     }
 
     create_reservation_service(data)
 
     reservation = Reservation.query.first()
-
-    db.session.add(reservation)
-    db.session.commit()
     return reservation
 
 
-def test_read_reservation_success(db_session, reservation):
-    reservation = get_reservation_service(reservation.id)
+def test_read_reservation_success(db_session, reservation, table):
+    reservation_data = get_reservation_service(reservation.id)
 
-    assert reservation["client_name"] == "João"
-    assert reservation["people_quantity"] == 2
-    assert reservation["table_number"] == 1
-    assert reservation["booking_date"] == date.today()
-    assert time.fromisoformat(reservation["initial_time"]) == time(16, 0)
-    assert time.fromisoformat(reservation["final_time"]) == time(17, 0, 0)
+    assert reservation_data["client_name"] == "João"
+    assert reservation_data["people_quantity"] == 2
+    assert reservation_data["table_number"] == 1
+    assert reservation_data["booking_date"] == date.today()
+    assert time.fromisoformat(reservation_data["initial_time"]) == time(15, 0)
+    assert time.fromisoformat(reservation_data["final_time"]) == time(17, 0)
+
+    assert reservation_data["table"]["status"] == "occupied"
 
 
 def test_read_reservation_not_found(db_session):
-
     with pytest.raises(NotFoundError) as error:
         get_reservation_service(1)
 

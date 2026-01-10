@@ -56,6 +56,8 @@ class ReservationCreateSchema(Schema):
         },
     )
 
+    status = fields.Str(error_messages={"ivalid": "Status é string"})
+
     @validates_schema
     def validate_times(self, data, **kwargs):
         if data["final_time"] <= data["initial_time"]:

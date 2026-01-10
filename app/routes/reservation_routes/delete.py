@@ -2,7 +2,7 @@ from flask import request, jsonify
 from flask_login import login_required
 
 from app.exceptions import NotFoundError
-from app.services.reservation.delete_reservation_service import (
+from app.services.reservation.cancel_reservation_service import (
     delete_reservation_service,
 )
 

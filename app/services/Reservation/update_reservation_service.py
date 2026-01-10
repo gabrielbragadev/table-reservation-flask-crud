@@ -1,57 +1,86 @@
-from datetime import datetime
-from flask import abort, jsonify
+from datetime import date, time
+from typing import Dict
 
-from app.exceptions import ConflictError
-from app.models.table import Table
-from app.services.Global.calculate_status_service import calculate_status
-from app.extensions import db
+from app.exceptions import ConflictError, NotFoundError
 from app.models.reservation import Reservation
+from app.models.table import Table
+from app.extensions import db
+from app.repositories.table_repository import TableRepository
+from app.repositories.reservation_repository import ReservationRepository
+from app.services.global_services.exists_time_conflict import (
+    check_reservation_time_conflict,
+)
+from app.services.global_services.check_table_capacity import check_table_capacity
 
 
-def update_reservation_service(data, id):
-    table_number = data.get("table_number")
+def update_reservation_service(data: Dict, reservation_id: int):
+
+    reservation_to_update = __get_reservation_to_update(reservation_id)
+    __check_reservation_exists(reservation_to_update)
+
+    table_number = (
+        data.get("table_number")
+        if data.get("table_number") is not None
+        else reservation_to_update.table_number
+    )
+
     people_quantity = data.get("people_quantity")
-    booking_date = data.get("booking_date")
+
+    booking_date = (
+        data.get("booking_date")
+        if data.get("booking_date") is not None
+        else reservation_to_update.booking_date
+    )
+
     initial_time = data.get("initial_time")
+
     final_time = data.get("final_time")
 
-    new_table = Table.query.filter_by(table_number=table_number).first()
-    if not new_table:
-        abort(404, description="Mesa não encontrada")
+    reservation_repository = __get_reservation_repository()
 
-    reservation = Reservation.query.filter_by(id=id).first()
-    if not reservation:
-        abort(404, description="Reserva não encontrada")
+    table_reservation = __check_table_exists(table_number)
 
-    old_table = Table.query.filter_by(table_number=reservation.table_number).first()
+    check_table_capacity(table_reservation, people_quantity)
 
-    reservation_filter_by = Reservation.query.filter_by(
-        table_number=table_number, booking_date=booking_date
-    ).all()
+    check_reservation_time_conflict(
+        table_number, booking_date, initial_time, final_time, reservation_to_update.id
+    )
 
-    for r in reservation_filter_by:
+    if table_number is not None:
+        reservation_to_update.table_number = table_reservation.table_number
+    if people_quantity is not None:
+        reservation_to_update.people_quantity = people_quantity
+    if booking_date is not None:
+        reservation_to_update.booking_date = booking_date
+    if initial_time is not None:
+        reservation_to_update.initial_time = initial_time
+    if final_time is not None:
+        reservation_to_update.final_time = final_time
 
-        if not (final_time <= r.initial_time or initial_time >= r.final_time):
-            raise ConflictError(message="Já existe reserva agendada para esse horário")
+    table_reservation.status
 
-        if people_quantity and people_quantity > new_table.people_capacity:
-            raise ConflictError("Quantidade de pessoas acima da capacidade da mesa")
+    reservation_repository.updated()
 
-    if old_table.status == "Reserved":
-        old_table.status = "Available"
 
-    if table_number:
-        reservation.table_number = new_table.table_number
-    if people_quantity:
-        reservation.people_quantity = people_quantity
-    if booking_date:
-        reservation.booking_date = booking_date
-    if initial_time:
-        reservation.initial_time = initial_time
-    if final_time:
-        reservation.final_time = final_time
+def __get_reservation_repository() -> ReservationRepository:
+    reservation_repository = ReservationRepository()
+    return reservation_repository
 
-    new_table.status = calculate_status(booking_date, initial_time)
 
-    db.session.commit()
-    return jsonify({"message": "Reserva Atualizada Com Sucesso"})
+def __get_reservation_to_update(reservation_id: int) -> Reservation:
+    reservation_repository = __get_reservation_repository()
+    reservation_to_update = reservation_repository.find_by_id(reservation_id)
+    return reservation_to_update
+
+
+def __check_table_exists(table_number: int) -> Table:
+    table_repository = TableRepository()
+    table_reservation = table_repository.find_by_table_number(table_number)
+    if not table_reservation:
+        raise NotFoundError(message="Mesa não encontrada")
+    return table_reservation
+
+
+def __check_reservation_exists(reservation_to_update: Reservation) -> None:
+    if not reservation_to_update:
+        raise NotFoundError(message="Reserva não encontrada")

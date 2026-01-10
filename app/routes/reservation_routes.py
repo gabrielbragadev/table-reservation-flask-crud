@@ -1,7 +1,6 @@
 from flask import Blueprint, request
-from flask_login import login_required, current_user
+from flask_login import login_required
 
-from app.exceptions import ConflictError, UnauthorizedError
 
 from app.schemas.reservation.reservation_create_schema import ReservationCreateSchema
 from app.schemas.reservation.reservation_update_schema import ReservationUpdateSchema
@@ -13,13 +12,15 @@ from app.services.reservation.read_reservation_service import get_reservation_se
 from app.services.reservation.update_reservation_service import (
     update_reservation_service,
 )
-from app.services.reservation.delete_reservation_service import (
+from app.services.reservation.cancel_reservation_service import (
     delete_reservation_service,
 )
 
 reservation_bp = Blueprint("reservation_bp", __name__, url_prefix="/reservations")
 import flask_login
+
 flask_login.confirm_login
+
 
 def register_reservation_routes(app):
     @app.route("/reservations", methods=["POST"])

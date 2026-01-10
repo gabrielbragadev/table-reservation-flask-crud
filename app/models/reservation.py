@@ -13,10 +13,11 @@ class Reservation(db.Model):
     booking_date = db.Column(db.Date, nullable=False)
     initial_time = db.Column(db.Time, nullable=False)
     final_time = db.Column(db.Time, nullable=False)
+    status = db.Column(db.String(80))
 
     table = db.relationship("Table", back_populates="reservations")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "id": self.id,
             "client_name": self.client_name,
@@ -25,4 +26,8 @@ class Reservation(db.Model):
             "booking_date": self.booking_date,
             "initial_time": self.initial_time.isoformat(),
             "final_time": self.final_time.isoformat(),
+            "table": {
+                "table_number": self.table.table_number,
+                "status": self.table.status,
+            },
         }

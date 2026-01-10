@@ -1,8 +1,9 @@
+from typing import Dict
 from app.exceptions import NotFoundError
 from app.repositories.reservation_repository import ReservationRepository
 
 
-def get_reservation_service(reservation_id: int) -> dict:
+def get_reservation_service(reservation_id: int) -> Dict:
 
     reservation_repository = ReservationRepository()
     reservation = reservation_repository.find_by_id(reservation_id)

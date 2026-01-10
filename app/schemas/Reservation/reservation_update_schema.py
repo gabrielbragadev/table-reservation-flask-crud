@@ -13,3 +13,5 @@ class ReservationUpdateSchema(Schema):
     booking_date = fields.Date()
     initial_time = fields.Time()
     final_time = fields.Time()
+    final_time = fields.Time()
+    status = fields.Str()

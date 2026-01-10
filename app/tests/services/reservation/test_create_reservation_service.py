@@ -1,5 +1,4 @@
 # run: pytest .\app\tests\\services\reservation\test_create_reservation_service.py -s -v
-
 import pytest
 from datetime import date, time
 
@@ -17,7 +16,6 @@ def table(db_session):
     table = Table(
         table_number=1,
         people_capacity=4,
-        status="Available",
     )
     db.session.add(table)
     db.session.commit()
@@ -30,22 +28,23 @@ def test_create_reservation_success(db_session, table):
         "people_quantity": 2,
         "table_number": 1,
         "booking_date": date.today(),
-        "initial_time": time(15, 50),
-        "final_time": time(16, 50),
+        "initial_time": time(10, 30),
+        "final_time": time(11, 50),
     }
 
-    create_reservation_service(data)
+    reservation = create_reservation_service(data)
 
-    reservation = Reservation.query.first()
+    saved = Reservation.query.first()
 
-    assert reservation is not None
-    assert reservation.client_name == "João"
-    assert reservation.people_quantity == 2
-    assert reservation.table_number == 1
-    assert reservation.booking_date == date.today()
-    assert reservation.initial_time == time(15, 50)
-    assert reservation.final_time == time(16, 50)
-    assert table.status == "Occupied"
+    assert saved is not None
+    assert saved.id == reservation.id
+    assert saved.client_name == "João"
+    assert saved.people_quantity == 2
+    assert saved.table_number == 1
+    assert saved.booking_date == date.today()
+    assert saved.initial_time == time(10, 30)
+    assert saved.final_time == time(11, 50)
+    assert saved.status == "active"
 
 
 def test_create_reservation_table_not_found(db_session):
@@ -72,6 +71,7 @@ def test_create_reservation_time_conflict(db_session, table):
         booking_date=date.today(),
         initial_time=time(18, 0),
         final_time=time(20, 0),
+        status="active",
     )
     db.session.add(existing)
     db.session.commit()

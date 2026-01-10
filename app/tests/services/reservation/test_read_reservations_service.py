@@ -19,7 +19,6 @@ def table(db_session):
     table = Table(
         table_number=1,
         people_capacity=4,
-        status="Available",
     )
     db.session.add(table)
     db.session.commit()
