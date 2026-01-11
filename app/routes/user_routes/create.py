@@ -1,4 +1,5 @@
 from flask import request, jsonify
+from extensions import db
 
 from app.exceptions import ConflictError, ForbiddenError, UnauthorizedError
 from app.services.user.create_user_service import CreateUserService
@@ -12,7 +13,7 @@ def create_user():
     data = UserCreateSchema().load(request.get_json())
 
     try:
-        service = CreateUserService(data)
+        service = CreateUserService(data, db.session)
         service.create_user()
         return jsonify({"message": "Usuário criado com sucesso"}), 201
     except UnauthorizedError as error:

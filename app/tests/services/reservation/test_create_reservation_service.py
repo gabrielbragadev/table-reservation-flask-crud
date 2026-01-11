@@ -2,13 +2,10 @@
 import pytest
 from datetime import date, time
 
-from app.extensions import db
 from app.models.table import Table
 from app.models.reservation import Reservation
 from app.exceptions import ConflictError
-from app.services.reservation.create_reservation_service import (
-    create_reservation_service,
-)
+from app.services.reservation.create_reservation_service import CreateReservationService
 
 
 @pytest.fixture
@@ -17,8 +14,8 @@ def table(db_session):
         table_number=1,
         people_capacity=4,
     )
-    db.session.add(table)
-    db.session.commit()
+    db_session.add(table)
+    db_session.commit()
     return table
 
 
@@ -32,9 +29,10 @@ def test_create_reservation_success(db_session, table):
         "final_time": time(11, 50),
     }
 
-    reservation = create_reservation_service(data)
+    service = CreateReservationService(data, db_session)
+    reservation = service.create_reservation()
 
-    saved = Reservation.query.first()
+    saved = db_session.query(Reservation).first()
 
     assert saved is not None
     assert saved.id == reservation.id
@@ -58,7 +56,8 @@ def test_create_reservation_table_not_found(db_session):
     }
 
     with pytest.raises(ValueError) as error:
-        create_reservation_service(data)
+        service = CreateReservationService(data, db_session)
+        service.create_reservation()
 
     assert "Mesa não encontrada" in str(error.value)
 
@@ -73,8 +72,8 @@ def test_create_reservation_time_conflict(db_session, table):
         final_time=time(20, 0),
         status="active",
     )
-    db.session.add(existing)
-    db.session.commit()
+    db_session.add(existing)
+    db_session.commit()
 
     data = {
         "client_name": "Lucas",
@@ -86,7 +85,8 @@ def test_create_reservation_time_conflict(db_session, table):
     }
 
     with pytest.raises(ConflictError) as error:
-        create_reservation_service(data)
+        service = CreateReservationService(data, db_session)
+        service.create_reservation()
 
     assert "Já existe reserva agendada para esse horario!" in str(error.value)
 
@@ -102,6 +102,7 @@ def test_create_reservation_exceeds_table_capacity(db_session, table):
     }
 
     with pytest.raises(ConflictError) as error:
-        create_reservation_service(data)
+        service = CreateReservationService(data, db_session)
+        service.create_reservation()
 
     assert "Quantidade de pessoas acima da capacidade" in str(error.value)

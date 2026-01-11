@@ -1,3 +1,5 @@
+from typing import Dict
+from sqlalchemy.orm import Session
 from app.drivers.bcrypt_handler import BcryptHandler
 
 from app.exceptions import ConflictError, ForbiddenError, UnauthorizedError
@@ -8,12 +10,12 @@ from app.drivers.flask_login_handler import FlaskLoginHandler
 
 class CreateUserService:
 
-    def __init__(self, data):
+    def __init__(self, data: Dict, session: Session):
         self.username = data.get("username")
         self.password = str.encode(data.get("password"))
         self.email = data.get("email")
         self.role = data.get("role")
-        self.user_repository = UserRepository()
+        self.user_repository = UserRepository(session)
         self.bcrypt_handler = BcryptHandler()
         self.hashed = self.bcrypt_handler.generate_password_hash(self.password)
         self.flask_login_handler = FlaskLoginHandler()

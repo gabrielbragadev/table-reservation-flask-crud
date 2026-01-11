@@ -1,10 +1,11 @@
 from app.models.table import Table
+from sqlalchemy.orm import Session
 
 
 class TableRepository:
 
-    def find_by_table_number(self, table_number=int) -> Table:
-        table = Table.query.filter_by(table_number=table_number).first()
-        return table
-    
-    
+    def __init__(self, session):
+        self.session: Session = session
+
+    def find_by_table_number(self, table_number):
+        return self.session.query(Table).filter_by(table_number=table_number).first()
