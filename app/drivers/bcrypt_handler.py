@@ -9,7 +9,7 @@ class BcryptHandler:
         self.__bcrypt = bcrypt
 
     def generate_password_hash(self, password: bytes) -> bytes:
-        return self.__bcrypt.hashpw(password, bcrypt.gensalt)
+        return self.__bcrypt.hashpw(password, self.__bcrypt.gensalt())
 
     def verify_password(self, user: User, password: bytes) -> bool:
         verify_password = self.__bcrypt.checkpw(password, user.password)

@@ -8,19 +8,18 @@ from app.models.user import User
 
 class FlaskLoginHandler:
 
-    @staticmethod
-    def login(user: User) -> None:
+    def login(self, user: User) -> None:
         flask_login_user(user)
 
-    @staticmethod
-    def logout() -> None:
+    def logout(self) -> None:
         flask_logout_user()
 
-    @staticmethod
-    def is_authenticated() -> bool:
+    def is_authenticated(self) -> bool:
         is_user_authenticated = current_user.is_authenticated
         return is_user_authenticated
 
-    @staticmethod
-    def get_user_id() -> int:
+    def find_current_user_id(self) -> int:
         return current_user.id
+
+    def find_current_user_is_authenticated(self) -> bool:
+        return current_user.is_authenticated

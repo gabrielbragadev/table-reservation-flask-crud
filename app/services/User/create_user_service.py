@@ -1,35 +1,69 @@
-import bcrypt
-from flask import abort, jsonify
-from flask_login import current_user
+from app.drivers.bcrypt_handler import BcryptHandler
 
-from app.extensions import db
+from app.exceptions import ConflictError, ForbiddenError, UnauthorizedError
 from app.models.user import User
+from app.repositories.user_repository import UserRepository
+from app.drivers.flask_login_handler import FlaskLoginHandler
 
 
-def create_user_service(data):
-    username = data.get("username")
-    password = str.encode(data.get("password"))
-    email = data.get("email")
-    role = data.get("role")
+class CreateUserService:
 
-    hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+    def __init__(self, data):
+        self.username = data.get("username")
+        self.password = str.encode(data.get("password"))
+        self.email = data.get("email")
+        self.role = data.get("role")
+        self.user_repository = UserRepository()
+        self.bcrypt_handler = BcryptHandler()
+        self.hashed = self.bcrypt_handler.generate_password_hash(self.password)
+        self.flask_login_handler = FlaskLoginHandler()
 
-    registered_users = User.query.all()
-    if not registered_users and current_user.is_authenticated == False:
-        user = User(username=username, password=hashed, email=email, role=role)
-        db.session.add(user)
-        db.session.commit()
-        return jsonify({"message": "Usuário cadastrado com sucesso"}), 201
+    def create_user(self) -> User:
 
-    if not current_user.is_authenticated:
-        abort(401, description="Sessão inválida ou expirada. Faça login novamente.")
+        self.__validate_user_creation_without_auth()
+        self.__validate_user_role_permission()
+        self.__is_username_taken()
 
-    authenticated_user = User.query.filter_by(id=current_user.id).first()
+        user = User(
+            username=self.username,
+            password=self.hashed,
+            email=self.email,
+            role=self.role,
+        )
+        self.user_repository.create(user)
+        return user
 
-    if authenticated_user.role == "user":
-        abort(403)
+    def __validate_user_creation_without_auth(self) -> None:
+        registered_users = self.user_repository.find_all()
+        current_user_is_authenticated = (
+            self.flask_login_handler.find_current_user_is_authenticated()
+        )
 
-    user = User(username=username, password=hashed, email=email, role=role)
-    db.session.add(user)
-    db.session.commit()
-    return jsonify({"message": "Usuário cadastrado com sucesso"}), 201
+        if registered_users and not current_user_is_authenticated:
+            raise UnauthorizedError(
+                message="Sessão inválida ou expirada. Faça login novamente."
+            )
+
+    def __validate_user_role_permission(self) -> None:
+
+        current_user_is_authenticated = (
+            self.flask_login_handler.find_current_user_is_authenticated()
+        )
+
+        if not current_user_is_authenticated:
+            return
+
+        current_user_id = self.flask_login_handler.find_current_user_id()
+        authenticated_user = self.user_repository.find_by_id(current_user_id)
+
+        if authenticated_user.role == "user":
+            raise ForbiddenError(
+                message="Você não tem permissão para realizar esta ação."
+            )
+
+    def __is_username_taken(self) -> None:
+        users_with_same_username = self.user_repository.find_by_username(self.username)
+        if users_with_same_username:
+            raise ConflictError(
+                message="Já existe usuário cadastrado com esse username"
+            )

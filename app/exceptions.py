@@ -13,3 +13,8 @@ class UnauthorizedError(Exception):
 class NotFoundError(Exception):
     def __init__(self, message):
         super().__init__(message)
+
+
+class ForbiddenError(Exception):
+    def __init__(self, message):
+        super().__init__(message)

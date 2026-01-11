@@ -13,7 +13,7 @@ from app.services.global_services.exists_time_conflict import (
 from app.services.global_services.check_table_capacity import check_table_capacity
 
 
-def update_reservation_service(data: Dict, reservation_id: int):
+def update_reservation_service(data: Dict, reservation_id: int) -> Reservation:
 
     reservation_to_update = __get_reservation_to_update(reservation_id)
     __check_reservation_exists(reservation_to_update)
@@ -60,6 +60,8 @@ def update_reservation_service(data: Dict, reservation_id: int):
     table_reservation.status
 
     reservation_repository.updated()
+
+    return reservation_to_update
 
 
 def __get_reservation_repository() -> ReservationRepository:

@@ -10,7 +10,7 @@ from app.routes.reservation_routes import reservations_bp
 
 @reservations_bp.route("/", methods=["GET"])
 @login_required
-def get_reservation():
+def get_reservations():
     try:
         reservations = get_reservations_service()
         return jsonify(reservations), 200

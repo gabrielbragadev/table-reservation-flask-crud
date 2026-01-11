@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from flask_login import current_user, login_required
+from flask_login import login_required
 
 from app.exceptions import ConflictError, UnauthorizedError
 from app.services.reservation.create_reservation_service import (
