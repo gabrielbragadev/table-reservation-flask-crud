@@ -1,6 +1,7 @@
 from typing import Dict
 from sqlalchemy.orm import Session
 from app.exceptions import NotFoundError
+from app.models.reservation import Reservation
 from app.repositories.reservation_repository import ReservationRepository
 
 
@@ -10,7 +11,7 @@ class GetReservationService:
         self.__reservation_repository = ReservationRepository(self.__session)
         self.__reservation_id = reservation_id
 
-    def to_execute(self, reservation_id: int) -> Dict:
+    def to_execute(self) -> Dict[Reservation]:
 
         reservation = self.__reservation_repository.find_by_id(self.__reservation_id)
         if not reservation:

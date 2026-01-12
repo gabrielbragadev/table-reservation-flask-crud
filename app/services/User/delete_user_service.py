@@ -1,26 +1,44 @@
-from flask import abort, jsonify
-from flask_login import current_user
+from typing import Dict
+from sqlalchemy.orm import Session
 
-from app.extensions import db
+from app.exceptions import ForbiddenError, NotFoundError
 from app.models.user import User
+from app.repositories.user_repository import UserRepository
+from app.drivers.flask_login_handler import FlaskLoginHandler
 
 
-def delete_user(user_id):
-    user = User.query.filter_by(id=user_id).first()
-    authenticated_user = User.query.filter_by(id=current_user.id).first()
+class DeleteUserService:
+    def __init__(self, user_id: int, session: Session) -> None:
+        self.__session = session
+        self.__user_repository = UserRepository(self.__session)
+        self.__flask_login_handler = FlaskLoginHandler()
+        self.__user_id = user_id
 
-    if current_user.id == user_id:
-        abort(
-            403,
-            description="Você não pode excluir seu próprio usuário enquanto estiver logado",
-        )
+    def to_execute(self) -> Dict[User]:
+        self.__user = self.__user_repository.find_by_id(self.__user_id)
+        self.__current_user_id = self.__flask_login_handler.find_current_user_id()
 
-    if authenticated_user.role == "user":
-        abort(403)
+        self.__validate_not_modifying_self()
+        self.__validate_user_cannot_delete_others()
+        self.__check_user_exists()
 
-    if user is None:
-        abort(404)
+        self.__user_repository.delete(self.__user)
+        return self.__user.to_dict()
 
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"message": "Registro excluído com sucesso"})
+    def __validate_not_modifying_self(self) -> None:
+        if self.__current_user_id == self.__user_id:
+            raise ForbiddenError(
+                message="Você não pode excluir seu próprio usuário enquanto estiver logado"
+            )
+
+    def __validate_user_cannot_delete_others(self) -> None:
+        authenticated_user = self.__user_repository.find_by_id(self.__current_user_id)
+
+        if authenticated_user.role == "user":
+            raise ForbiddenError(
+                message="Você não tem permissão pra realizar essa ação"
+            )
+
+    def __check_user_exists(self):
+        if self.__user is None:
+            raise NotFoundError("Registro não encontrado")

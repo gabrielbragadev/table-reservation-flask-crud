@@ -23,3 +23,7 @@ class UserRepository:
     def create(self, user: User) -> None:
         self.session.add(user)
         self.session.commit()
+
+    def delete(self, user: User) -> None:
+        self.session.delete(user)
+        self.session.commit()

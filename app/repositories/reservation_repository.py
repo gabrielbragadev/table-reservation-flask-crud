@@ -10,7 +10,7 @@ class ReservationRepository:
     def __init__(self, session):
         self.session: Session = session
 
-    def save(self, reservation):
+    def save(self, reservation: Reservation):
         self.session.add(reservation)
         self.session.commit()
 

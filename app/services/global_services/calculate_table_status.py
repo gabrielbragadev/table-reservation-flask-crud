@@ -2,7 +2,6 @@ from datetime import datetime, date, time
 
 
 from datetime import datetime, date, time
-from typing import Dict
 
 AVAILABLE = "available"
 OCCUPIED = "occupied"
