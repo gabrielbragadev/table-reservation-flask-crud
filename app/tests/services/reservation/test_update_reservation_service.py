@@ -6,9 +6,7 @@ from app.extensions import db
 from app.models.table import Table
 from app.models.reservation import Reservation
 from app.exceptions import ConflictError, NotFoundError
-from app.services.reservation.update_reservation_service import (
-    update_reservation_service,
-)
+from app.services.reservation.update_reservation_service import UpdateReservationsService
 
 
 @pytest.fixture
@@ -46,15 +44,16 @@ def test_update_reservation_success(db_session, table, reservation):
         "final_time": time(13, 0),
     }
 
-    update_reservation_service(data, reservation.id)
+    service = UpdateReservationsService(data, reservation.id, db_session)
+    updated = service.to_execute()
 
-    updated = Reservation.query.get(reservation.id)
+    updated_from_db = db_session.get(Reservation, reservation.id)
 
-    assert updated is not None
-    assert updated.people_quantity == 3
-    assert updated.booking_date == date.today()
-    assert updated.initial_time == time(12, 0)
-    assert updated.final_time == time(13, 0)
+    assert updated_from_db is not None
+    assert updated_from_db.people_quantity == 3
+    assert updated_from_db.booking_date == date.today()
+    assert updated_from_db.initial_time == time(12, 0)
+    assert updated_from_db.final_time == time(13, 0)
 
 
 def test_update_reservation_not_found(db_session):
@@ -62,8 +61,9 @@ def test_update_reservation_not_found(db_session):
         "people_quantity": 2,
     }
 
+    service = UpdateReservationsService(data, reservation_id=999, session=db_session)
     with pytest.raises(NotFoundError) as error:
-        update_reservation_service(data, reservation_id=999)
+        service.to_execute()
 
     assert "Reserva não encontrada" in str(error.value)
 
@@ -78,16 +78,17 @@ def test_update_reservation_time_conflict(db_session, table, reservation):
         final_time=time(13, 0),
         status="active",
     )
-    db.session.add(conflicting)
-    db.session.commit()
+    db_session.add(conflicting)
+    db_session.commit()
 
     data = {
         "initial_time": time(12, 30),
         "final_time": time(13, 30),
     }
 
+    service = UpdateReservationsService(data, reservation.id, db_session)
     with pytest.raises(ConflictError) as error:
-        update_reservation_service(data, reservation.id)
+        service.to_execute()
 
     assert "Já existe reserva agendada para esse horario!" in str(error.value)
 
@@ -97,7 +98,8 @@ def test_update_reservation_exceeds_table_capacity(db_session, table, reservatio
         "people_quantity": 10,
     }
 
+    service = UpdateReservationsService(data, reservation.id, db_session)
     with pytest.raises(ConflictError) as error:
-        update_reservation_service(data, reservation.id)
+        service.to_execute()
 
     assert "Quantidade de pessoas acima da capacidade" in str(error.value)

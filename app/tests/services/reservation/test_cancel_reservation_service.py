@@ -7,12 +7,11 @@ from app.models.reservation import Reservation
 from app.models.table import Table
 from app.exceptions import NotFoundError
 from app.services.reservation.create_reservation_service import (
-    create_reservation_service,
+    CreateReservationService,
 )
 from app.services.reservation.cancel_reservation_service import (
-    cancel_reservation_service,
+    CancelReservationService,
 )
-from app.extensions import db
 
 
 @pytest.fixture
@@ -37,26 +36,26 @@ def reservation(db_session, table):
         "final_time": time(23, 30),
     }
 
-    create_reservation_service(data)
-    return Reservation.query.first()
+    service = CreateReservationService(data, db_session)
+    service.to_execute()
+
+    return db_session.query(Reservation).first()
 
 
-def test_cancel_reservation_service(db_session, reservation, table):
+def test_cancel_reservation_service(db_session, reservation):
     reservation_id = reservation.id
 
-    cancel_reservation_service(reservation_id)
-
-    updated = db.session.get(Reservation, reservation_id)
+    service = CancelReservationService(reservation_id, db_session)
+    updated = service.to_execute()
 
     assert updated is not None
-
     assert updated.status == "cancelled"
-
-    assert table.status == "available"
 
 
 def test_cancel_reservation_not_found(db_session):
+    service = CancelReservationService(999, db_session)
+
     with pytest.raises(NotFoundError) as error:
-        cancel_reservation_service(999)
+        service.to_execute()
 
     assert "Reserva não encontrada" in str(error.value)

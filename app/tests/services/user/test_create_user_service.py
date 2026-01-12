@@ -53,7 +53,7 @@ def test_create_user_success(db_session, app, admin_user):
             }
 
             service = CreateUserService(data, db_session)
-            user = service.create_user()
+            user = service.to_execute()
 
             saved = db_session.query(User).filter_by(username="gabriel").first()
 
@@ -79,7 +79,7 @@ def test_create_user_without_authentication(db_session, app, admin_user):
             service = CreateUserService(data, db_session)
 
             with pytest.raises(UnauthorizedError) as error:
-                service.create_user()
+                service.to_execute()
 
             assert "Sessão inválida ou expirada" in str(error.value)
 
@@ -99,7 +99,7 @@ def test_create_user_with_user_role_forbidden(db_session, app, normal_user):
             service = CreateUserService(data, db_session)
 
             with pytest.raises(ForbiddenError) as error:
-                service.create_user()
+                service.to_execute()
 
             assert "não tem permissão" in str(error.value)
 
@@ -128,6 +128,6 @@ def test_create_user_with_existing_username_conflict(db_session, app, admin_user
             service = CreateUserService(data, db_session)
 
             with pytest.raises(ConflictError) as error:
-                service.create_user()
+                service.to_execute()
 
             assert "Já existe usuário cadastrado com esse username" in str(error.value)

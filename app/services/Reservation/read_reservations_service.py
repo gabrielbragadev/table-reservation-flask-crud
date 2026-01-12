@@ -1,14 +1,21 @@
 from typing import Dict, List
+from sqlalchemy.orm import Session
 
 from app.exceptions import NotFoundError
 from app.repositories.reservation_repository import ReservationRepository
 
 
-def get_reservations_service() -> List[Dict]:
-    reservation_repository = ReservationRepository()
-    reservations = reservation_repository.find_all()
+class GetReservationsService:
 
-    if not reservations:
-        raise NotFoundError(message="Nenhum registro encontrado")
-    response = [r.to_dict() for r in reservations]
-    return response
+    def __init__(self, session: Session) -> None:
+        self.__session = session
+        self.__reservation_repository = ReservationRepository(self.__session)
+
+    def to_execute(self) -> List[Dict]:
+
+        reservations = self.__reservation_repository.find_all()
+
+        if not reservations:
+            raise NotFoundError(message="Nenhum registro encontrado")
+        response = [r.to_dict() for r in reservations]
+        return response

@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from flask_login import login_required
-from extensions import db
+from app.extensions import db
 
 from app.exceptions import ConflictError, UnauthorizedError
 from app.services.reservation.create_reservation_service import CreateReservationService
@@ -16,7 +16,7 @@ def create_reservation():
 
     try:
         service = CreateReservationService(data, db.session)
-        service.create_reservation()
+        service.to_execute()
         return jsonify({"message": "Reserva realizada com sucesso"}), 201
     except ValueError as error:
         return jsonify({"error": str(error.message)}), 404

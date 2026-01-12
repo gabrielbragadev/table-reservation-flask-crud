@@ -1,88 +1,83 @@
-from datetime import date, time
 from typing import Dict
+from sqlalchemy.orm import Session
 
-from app.exceptions import ConflictError, NotFoundError
+from app.exceptions import NotFoundError
 from app.models.reservation import Reservation
 from app.models.table import Table
-from app.extensions import db
 from app.repositories.table_repository import TableRepository
 from app.repositories.reservation_repository import ReservationRepository
-from app.services.global_services.exists_time_conflict import (
-    check_reservation_time_conflict,
-)
+from app.services.global_services.exists_time_conflict import ReservationTimeConflict
 from app.services.global_services.check_table_capacity import check_table_capacity
 
 
-def update_reservation_service(data: Dict, reservation_id: int) -> Reservation:
+class UpdateReservationsService:
 
-    reservation_to_update = __get_reservation_to_update(reservation_id)
-    __check_reservation_exists(reservation_to_update)
+    def __init__(self, data: Dict, reservation_id: int, session: Session) -> None:
+        self.__session = session
+        self.__reservation_id = reservation_id
+        self.__table_number = data.get("table_number")
+        self.__people_quantity = data.get("people_quantity")
+        self.__booking_date = data.get("booking_date")
+        self.__initial_time = data.get("initial_time")
+        self.__final_time = data.get("final_time")
+        self.__reservation_repository = ReservationRepository(self.__session)
+        self.__table_repository = TableRepository(self.__session)
+        self.__reservation_time_conflict = ReservationTimeConflict(self.__session)
 
-    table_number = (
-        data.get("table_number")
-        if data.get("table_number") is not None
-        else reservation_to_update.table_number
-    )
+    def to_execute(self) -> Reservation:
 
-    people_quantity = data.get("people_quantity")
+        reservation_to_update = self.__reservation_repository.find_by_id(
+            self.__reservation_id
+        )
+        self.__check_reservation_exists(reservation_to_update)
+        self.__validate_table_number_in_request(reservation_to_update)
+        self.__validate_booking_date_in_request(reservation_to_update)
 
-    booking_date = (
-        data.get("booking_date")
-        if data.get("booking_date") is not None
-        else reservation_to_update.booking_date
-    )
+        table_reservation = self.__check_table_exists()
 
-    initial_time = data.get("initial_time")
+        check_table_capacity(table_reservation, self.__people_quantity)
+        self.__reservation_time_conflict.check(
+            self.__table_number,
+            self.__booking_date,
+            self.__initial_time,
+            self.__final_time,
+            reservation_to_update.id,
+        )
 
-    final_time = data.get("final_time")
+        reservation_to_update.table_number = self.__table_number
+        reservation_to_update.booking_date = self.__booking_date
 
-    reservation_repository = __get_reservation_repository()
+        if self.__people_quantity is not None:
+            reservation_to_update.people_quantity = self.__people_quantity
+        if self.__initial_time is not None:
+            reservation_to_update.initial_time = self.__initial_time
+        if self.__final_time is not None:
+            reservation_to_update.final_time = self.__final_time
 
-    table_reservation = __check_table_exists(table_number)
+        table_reservation.status
 
-    check_table_capacity(table_reservation, people_quantity)
+        self.__reservation_repository.updated()
 
-    check_reservation_time_conflict(
-        table_number, booking_date, initial_time, final_time, reservation_to_update.id
-    )
+        return reservation_to_update
 
-    if table_number is not None:
-        reservation_to_update.table_number = table_reservation.table_number
-    if people_quantity is not None:
-        reservation_to_update.people_quantity = people_quantity
-    if booking_date is not None:
-        reservation_to_update.booking_date = booking_date
-    if initial_time is not None:
-        reservation_to_update.initial_time = initial_time
-    if final_time is not None:
-        reservation_to_update.final_time = final_time
+    def __validate_table_number_in_request(
+        self, reservation_to_update: Reservation
+    ) -> None:
+        if self.__table_number is None:
+            self.__table_number = reservation_to_update.table_number
 
-    table_reservation.status
+    def __validate_booking_date_in_request(self, reservation_to_update: Reservation):
+        if self.__booking_date is None:
+            self.__booking_date = reservation_to_update.booking_date
 
-    reservation_repository.updated()
+    def __check_table_exists(self) -> Table:
+        table_reservation = self.__table_repository.find_by_table_number(
+            self.__table_number
+        )
+        if not table_reservation:
+            raise NotFoundError(message="Mesa não encontrada")
+        return table_reservation
 
-    return reservation_to_update
-
-
-def __get_reservation_repository() -> ReservationRepository:
-    reservation_repository = ReservationRepository()
-    return reservation_repository
-
-
-def __get_reservation_to_update(reservation_id: int) -> Reservation:
-    reservation_repository = __get_reservation_repository()
-    reservation_to_update = reservation_repository.find_by_id(reservation_id)
-    return reservation_to_update
-
-
-def __check_table_exists(table_number: int) -> Table:
-    table_repository = TableRepository()
-    table_reservation = table_repository.find_by_table_number(table_number)
-    if not table_reservation:
-        raise NotFoundError(message="Mesa não encontrada")
-    return table_reservation
-
-
-def __check_reservation_exists(reservation_to_update: Reservation) -> None:
-    if not reservation_to_update:
-        raise NotFoundError(message="Reserva não encontrada")
+    def __check_reservation_exists(self, reservation_to_update: Reservation) -> None:
+        if not reservation_to_update:
+            raise NotFoundError(message="Reserva não encontrada")

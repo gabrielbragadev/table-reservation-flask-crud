@@ -5,8 +5,9 @@ from app.repositories.reservation_repository import ReservationRepository
 
 
 class ReservationTimeConflict:
-    def __init__(self, session: Session):
-        self.reservation_repository = ReservationRepository(session)
+    def __init__(self, session: Session) -> None:
+        self.__session = session
+        self.__reservation_repository = ReservationRepository(self.__session)
 
     def check(
         self,
@@ -18,7 +19,7 @@ class ReservationTimeConflict:
     ) -> None:
 
         reservations_by_table_and_date = (
-            self.reservation_repository.find_by_table_and_date(
+            self.__reservation_repository.find_by_table_and_date(
                 table_number, booking_date
             )
         )

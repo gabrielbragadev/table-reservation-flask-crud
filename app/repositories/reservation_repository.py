@@ -19,7 +19,9 @@ class ReservationRepository:
         return all_the_reservations
 
     def find_by_id(self, reservation_id: int) -> Reservation:
-        reservation = self.session.query(Reservation).filter_by(id=reservation_id)
+        reservation = (
+            self.session.query(Reservation).filter_by(id=reservation_id).first()
+        )
         return reservation
 
     def find_by_table_and_date(

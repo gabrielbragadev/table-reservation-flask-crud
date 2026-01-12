@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from extensions import db
+from app.extensions import db
 
 from app.exceptions import ConflictError, ForbiddenError, UnauthorizedError
 from app.services.user.create_user_service import CreateUserService

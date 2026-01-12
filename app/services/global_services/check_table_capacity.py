@@ -2,6 +2,7 @@ from app.exceptions import ConflictError
 from app.models.table import Table
 
 
+
 def check_table_capacity(table: Table, people_quantity: int | None) -> None:
 
     if people_quantity is None:
