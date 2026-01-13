@@ -3,13 +3,13 @@
 from datetime import date, time
 import pytest
 
-from app.models.reservation import Reservation
-from app.models.table import Table
-from app.exceptions import NotFoundError
-from app.services.reservation.create_reservation_service import (
+from app.domains.entities.reservation import Reservation
+from app.domains.entities.table import Table
+from app.domains.exceptions import NotFoundError
+from app.application.services.reservation.create_reservation_service import (
     CreateReservationService,
 )
-from app.services.reservation.cancel_reservation_service import (
+from app.application.services.reservation.cancel_reservation_service import (
     CancelReservationService,
 )
 

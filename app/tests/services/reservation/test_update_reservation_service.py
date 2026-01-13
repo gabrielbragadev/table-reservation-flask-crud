@@ -2,11 +2,11 @@
 import pytest
 from datetime import date, time
 
-from app.extensions import db
-from app.models.table import Table
-from app.models.reservation import Reservation
-from app.exceptions import ConflictError, NotFoundError
-from app.services.reservation.update_reservation_service import UpdateReservationsService
+from app.infrastructure.extensions import db
+from app.domains.entities.table import Table
+from app.domains.entities.reservation import Reservation
+from app.domains.exceptions import ConflictError, NotFoundError
+from app.application.services.reservation.update_reservation_service import UpdateReservationsService
 
 
 @pytest.fixture

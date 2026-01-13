@@ -2,10 +2,10 @@
 import pytest
 from flask_login import login_user, logout_user
 
-from app.extensions import db, login_manager
-from app.models.user import User
-from app.exceptions import ForbiddenError, NotFoundError
-from app.services.user.delete_user_service import DeleteUserService
+from app.infrastructure.extensions import db, login_manager
+from app.domains.entities.user import User
+from app.domains.exceptions import ForbiddenError, NotFoundError
+from app.application.services.user.delete_user_service import DeleteUserService
 
 
 @login_manager.user_loader

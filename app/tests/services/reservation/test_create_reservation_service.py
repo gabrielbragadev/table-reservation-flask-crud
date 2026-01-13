@@ -2,10 +2,10 @@
 import pytest
 from datetime import date, time
 
-from app.models.table import Table
-from app.models.reservation import Reservation
-from app.exceptions import ConflictError
-from app.services.reservation.create_reservation_service import CreateReservationService
+from app.domains.entities.table import Table
+from app.domains.entities.reservation import Reservation
+from app.domains.exceptions import ConflictError
+from app.application.services.reservation.create_reservation_service import CreateReservationService
 
 
 @pytest.fixture

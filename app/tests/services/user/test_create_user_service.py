@@ -3,10 +3,10 @@ import pytest
 from flask_login import login_user, logout_user
 
 
-from app.extensions import db, login_manager
-from app.models.user import User
-from app.exceptions import UnauthorizedError, ForbiddenError, ConflictError
-from app.services.user.create_user_service import CreateUserService
+from app.infrastructure.extensions import db, login_manager
+from app.domains.entities.user import User
+from app.domains.exceptions import UnauthorizedError, ForbiddenError, ConflictError
+from app.application.services.user.create_user_service import CreateUserService
 
 
 @login_manager.user_loader
