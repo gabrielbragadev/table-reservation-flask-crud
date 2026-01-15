@@ -1,10 +1,10 @@
 from flask import jsonify, abort
 from flask_login import current_user
-from app.domains.exceptions import ConflictError
+from app.domain.exceptions import ConflictError
 from app.infrastructure.extensions import db
-from app.domains.entities.reservation import Reservation
-from app.domains.entities.table import Table
-from app.domains.entities.user import User
+from app.domain.entities.reservation import Reservation
+from app.domain.entities.table import Table
+from app.domain.entities.user import User
 
 
 def update_table(data, table_id):

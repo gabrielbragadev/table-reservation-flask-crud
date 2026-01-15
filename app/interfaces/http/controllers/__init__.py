@@ -1,6 +1,6 @@
-from app.interfaces.http.controllers.reservation_routes import reservations_bp
-from app.interfaces.http.controllers.auth_routes import auth_bp
-from app.interfaces.http.controllers.user_routes import users_bp
+from app.interfaces.http.controllers.reservation_controllers import reservations_bp
+from app.interfaces.http.controllers.auth_controllers import auth_bp
+from app.interfaces.http.controllers.user_controllers import users_bp
 
 
 def register_routes(app):

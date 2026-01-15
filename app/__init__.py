@@ -1,12 +1,12 @@
 from flask import Flask, jsonify
 
-from app.domains.errors import register_error_handlers
+from app.domain.errors import register_error_handlers
 from app.interfaces.http.controllers import register_routes
 from app.infrastructure.config import Config
 from app.infrastructure.extensions import db, login_manager, socketio
-from app.domains.entities.reservation import Reservation
-from app.domains.entities.table import Table
-from app.domains.entities.user import User
+from app.domain.entities.reservation import Reservation
+from app.domain.entities.table import Table
+from app.domain.entities.user import User
 
 
 def create_app():

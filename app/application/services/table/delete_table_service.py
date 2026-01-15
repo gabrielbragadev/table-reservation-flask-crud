@@ -1,11 +1,11 @@
 from flask_login import current_user
-from app.domains.exceptions import ConflictError
+from app.domain.exceptions import ConflictError
 from app.infrastructure.extensions import db
-from app.domains.entities.table import Table
-from app.domains.entities.reservation import Reservation
+from app.domain.entities.table import Table
+from app.domain.entities.reservation import Reservation
 from flask import abort, jsonify
 
-from app.domains.entities.user import User
+from app.domain.entities.user import User
 
 
 def delete_table_service(table_id):

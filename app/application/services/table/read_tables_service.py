@@ -1,8 +1,8 @@
 from flask_login import current_user
-from app.domains.entities.table import Table
+from app.domain.entities.table import Table
 from flask import abort, jsonify
 
-from app.domains.entities.user import User
+from app.domain.entities.user import User
 
 
 def get_tables_service():

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from datetime import date, time
-from app.domains.exceptions import ConflictError
-from app.domains.repositories.reservation_repository import ReservationRepository
+from app.domain.exceptions import ConflictError
+from app.domain.repositories.reservation_repository import ReservationRepository
 
 
 class ReservationTimeConflict:

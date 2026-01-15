@@ -1,9 +1,9 @@
 from typing import Dict
 from sqlalchemy.orm import Session
 
-from app.domains.exceptions import ForbiddenError, NotFoundError
-from app.domains.entities.user import User
-from app.domains.repositories.user_repository import UserRepository
+from app.domain.exceptions import ForbiddenError, NotFoundError
+from app.domain.entities.user import User
+from app.domain.repositories.user_repository import UserRepository
 from app.drivers.flask_login_handler import FlaskLoginHandler
 
 

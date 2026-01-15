@@ -1,5 +1,5 @@
 from app.drivers.flask_login_handler import FlaskLoginHandler
-from app.domains.exceptions import ForbiddenError
+from app.domain.exceptions import ForbiddenError
 
 
 def user_logout_service() -> None:

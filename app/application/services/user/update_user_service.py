@@ -3,9 +3,9 @@ import bcrypt
 from flask import abort, jsonify
 from flask_login import current_user
 
-from app.domains.exceptions import ConflictError
+from app.domain.exceptions import ConflictError
 from app.infrastructure.extensions import db
-from app.domains.entities.user import User
+from app.domain.entities.user import User
 
 
 def update_user(data, user_id):

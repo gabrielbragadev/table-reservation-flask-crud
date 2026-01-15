@@ -3,7 +3,7 @@ from flask_login import (
     login_user as flask_login_user,
     logout_user as flask_logout_user,
 )
-from app.domains.entities.user import User
+from app.domain.entities.user import User
 
 
 class FlaskLoginHandler:

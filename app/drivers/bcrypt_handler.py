@@ -1,6 +1,6 @@
 import bcrypt
 
-from app.domains.entities.user import User
+from app.domain.entities.user import User
 
 
 class BcryptHandler:

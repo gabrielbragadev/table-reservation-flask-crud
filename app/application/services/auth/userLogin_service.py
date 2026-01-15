@@ -2,8 +2,8 @@ from typing import Dict
 from app.drivers.bcrypt_handler import BcryptHandler
 from app.drivers.flask_login_handler import FlaskLoginHandler
 
-from app.domains.exceptions import UnauthorizedError
-from app.domains.repositories.user_repository import UserRepository
+from app.domain.exceptions import UnauthorizedError
+from app.domain.repositories.user_repository import UserRepository
 
 
 def user_login_service(data: Dict) -> None:

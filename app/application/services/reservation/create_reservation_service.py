@@ -1,52 +1,74 @@
-from typing import Dict
-from sqlalchemy.orm import Session
-
-from app.domains.entities.reservation import Reservation
-from app.domains.entities.table import Table
-from app.domains.repositories.reservation_repository import ReservationRepository
-from app.domains.repositories.table_repository import TableRepository
-from app.application.services.global_services.exists_time_conflict import ReservationTimeConflict
-from app.application.services.global_services.check_table_capacity import check_table_capacity
+from app.application.commands.reservation.create_reservation_command import (
+    CreateReservationCommand,
+)
+from app.domain.entities.reservation import Reservation
+from app.domain.repositories.reservation_repository import ReservationRepository
+from app.domain.rules.reservation_rules import ReservationRules
+from app.domain.services.reservation.reservation_conflict_checker import (
+    ReservationConflictChecker,
+)
+from app.domain.services.reservation.reservation_table_provider import (
+    ReservationTableProvider,
+)
+from app.domain.uow.unit_of_work import UnitOfWork
 
 
 class CreateReservationService:
-    def __init__(self, data: Dict, session: Session) -> None:
-        self.__session = session
-        self.__client_name = data["client_name"]
-        self.__people_quantity = data["people_quantity"]
-        self.__table_number = data["table_number"]
-        self.__booking_date = data["booking_date"]
-        self.__initial_time = data["initial_time"]
-        self.__final_time = data["final_time"]
-        self.__reservation_repository = ReservationRepository(self.__session)
-        self.__table_repository = TableRepository(self.__session)
-        self.__reservation_time_conflict = ReservationTimeConflict(self.__session)
+    def __init__(
+        self,
+        reservation_repository: ReservationRepository,
+        conflict_checker: ReservationConflictChecker,
+        reservation_table_provider: ReservationTableProvider,
+        unit_of_work: UnitOfWork,
+    ) -> None:
+        self.__reservation_repository = reservation_repository
+        self.__conflict_checker = conflict_checker
+        self.__table_provider = reservation_table_provider
+        self.__uow = unit_of_work
+        self.__table = None
+        self.__command = None
 
-    def to_execute(self) -> Reservation:
+    def to_execute(self, command: CreateReservationCommand) -> Reservation:
 
-        table = self.__check_table_exists()
+        self.__command = command
+        self.__get_table_reservation()
 
-        self.__reservation_time_conflict.check(
-            self.__table_number, self.__booking_date, self.__initial_time, self.__final_time
-        )
-        check_table_capacity(table, self.__people_quantity)
+        self.__check_table_capacity()
+        self.__validate_time_conflict()
 
         reservation = Reservation(
-            client_name=self.__client_name,
-            people_quantity=self.__people_quantity,
-            table_number=table.table_number,
-            booking_date=self.__booking_date,
-            initial_time=self.__initial_time,
-            final_time=self.__final_time,
+            client_name=self.__command.data.client_name,
+            people_quantity=self.__command.data.people_quantity,
+            table_number=self.__command.data.table_number,
+            booking_date=self.__command.data.booking_date,
+            initial_time=self.__command.data.initial_time,
+            final_time=self.__command.data.final_time,
             status="active",
         )
 
-        self.__reservation_repository.create(reservation)
+        self.__reservation_repository.save(reservation)
+        self.__uow.commit()
 
         return reservation
 
-    def __check_table_exists(self) -> Table:
-        table = self.__table_repository.find_by_table_number(self.__table_number)
-        if table is None:
-            raise ValueError("Mesa não encontrada")
-        return table
+    def __get_table_reservation(self) -> None:
+        self.__table = self.__table_provider.get_table_from_reservation(
+            self.__command.data.table_number
+        )
+
+    def __check_table_capacity(self) -> None:
+        ReservationRules.check_table_capacity(
+            self.__table, self.__command.data.people_quantity
+        )
+
+    def __has_conflict(self) -> bool:
+        has_conflict = self.__conflict_checker.exists(
+            self.__command.data.table_number,
+            self.__command.data.booking_date,
+            self.__command.data.initial_time,
+            self.__command.data.final_time,
+        )
+        return has_conflict
+
+    def __validate_time_conflict(self) -> None:
+        ReservationRules.validate_time_conflict(self.__has_conflict())

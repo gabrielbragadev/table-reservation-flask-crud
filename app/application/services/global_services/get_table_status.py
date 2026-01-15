@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.domains.entities.table import Table
+from app.domain.entities.table import Table
 from app.application.services.global_services.calculate_table_status import calculate_table_status
 
 
