@@ -1,10 +1,21 @@
-from app.drivers.flask_login_handler import FlaskLoginHandler
+from app.drivers.interfaces.flask_login_handler_interface import (
+    FlaskLoginHandlerInterface,
+)
 from app.domain.exceptions import ForbiddenError
 
 
-def user_logout_service() -> None:
-    flask_login_handler = FlaskLoginHandler()
+class LogoutService:
+    def __init__(self, flask_login_handler: FlaskLoginHandlerInterface):
+        self.__flask_login_handler = flask_login_handler
 
-    if flask_login_handler.get_current_user_id().is_authenticated:
-        flask_login_handler.logout()
-    raise ForbiddenError(message="É necessário estar autenticado para realizar logout")
+    def user_logout_service(self) -> None:
+
+        self.__is_authenticated()
+        self.__flask_login_handler.logout()
+
+    def __is_authenticated(self):
+        if self.__flask_login_handler.find_current_user_is_authenticated():
+            return
+        raise ForbiddenError(
+            message="É necessário estar autenticado para realizar logout"
+        )

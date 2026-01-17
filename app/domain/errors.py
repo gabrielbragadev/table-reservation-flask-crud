@@ -44,9 +44,12 @@ def register_error_handlers(app):
     @app.errorhandler(NotFoundError)
     def notfound_error(err):
         message = (
-            (err.description)
-            if hasattr(err, "description")
-            else getattr(err, "message", "Não encontrado")
+            (
+                (err.description)
+                if hasattr(err, "description")
+                else getattr(err, "message", "Não encontrado")
+            ),
+            404,
         )
 
         return (

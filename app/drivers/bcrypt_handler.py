@@ -1,9 +1,9 @@
 import bcrypt
-
+from app.drivers.interfaces.bcrypt_handler_interface import BcryptHandlerInterface
 from app.domain.entities.user import User
 
 
-class BcryptHandler:
+class BcryptHandler(BcryptHandlerInterface):
 
     def __init__(self) -> None:
         self.__bcrypt = bcrypt
