@@ -18,6 +18,10 @@ class UserRepository(ABC):
         pass
 
     @abstractmethod
+    def find_by_email(self, email: str) -> User:
+        pass
+
+    @abstractmethod
     def find_all(self) -> List[User]:
         user = self.session.query(User).all()
         return user

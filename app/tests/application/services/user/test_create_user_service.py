@@ -1,133 +1,132 @@
-# run: pytest .\app\tests\services\user\test_create_user_service.py -s -v
+# pytest .\app\tests\application\services\user\test_create_user_service.py -s -v
+
 import pytest
-from flask_login import login_user, logout_user
+from unittest.mock import Mock
 
-
-from app.infrastructure.extensions import db, login_manager
-from app.domain.entities.user import User
-from app.domain.exceptions import UnauthorizedError, ForbiddenError, ConflictError
 from app.application.services.user.create_user_service import CreateUserService
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
-@pytest.fixture
-def admin_user(db_session):
-    user = User(
-        username="admin",
-        password=b"hash",
-        email="admin@email.com",
-        role="admin",
-    )
-    db_session.add(user)
-    db_session.commit()
-    return user
+from app.application.commands.user.create_user_command import CreateUserCommand
+from app.domain.entities.user import User
+from app.domain.exceptions import (
+    UnauthorizedError,
+    ForbiddenError,
+    ConflictError,
+)
 
 
 @pytest.fixture
-def normal_user(db_session):
-    user = User(
-        username="user",
-        password=b"hash",
-        email="user@email.com",
-        role="user",
+def user_repository():
+    return Mock()
+
+
+@pytest.fixture
+def flask_login_handler():
+    return Mock()
+
+
+@pytest.fixture
+def unit_of_work():
+    uow = Mock()
+    uow.commit = Mock()
+    return uow
+
+
+@pytest.fixture
+def create_user_command():
+    command = Mock(spec=CreateUserCommand)
+    command.requester_role = "admin"
+
+    command.data = Mock()
+    command.data.username = "john"
+    command.data.email = "john@email.com"
+    command.data.password = "123456"
+    command.data.role = "user"
+
+    return command
+
+
+@pytest.fixture
+def service(user_repository, flask_login_handler, unit_of_work):
+    return CreateUserService(
+        user_repository=user_repository,
+        flask_login_handler=flask_login_handler,
+        unit_of_work=unit_of_work,
     )
-    db_session.add(user)
-    db_session.commit()
-    return user
 
 
-def test_create_user_success(db_session, app, admin_user):
-    with app.app_context():
-        with app.test_request_context():
-            login_user(admin_user)
+def test_should_create_user_successfully(
+    service,
+    user_repository,
+    flask_login_handler,
+    unit_of_work,
+    create_user_command,
+):
+    user_repository.find_all.return_value = []
+    flask_login_handler.find_current_user_is_authenticated.return_value = True
+    user_repository.find_by_username.return_value = None
+    user_repository.find_by_email.return_value = None
 
-            data = {
-                "username": "gabriel",
-                "password": "123456",
-                "email": "gabriel@email.com",
-                "role": "user",
-            }
+    user = service.to_execute(create_user_command)
 
-            service = CreateUserService(data, db_session)
-            user = service.to_execute()
+    assert isinstance(user, User)
+    assert user.username == "john"
+    assert user.email == "john@email.com"
 
-            saved = db_session.query(User).filter_by(username="gabriel").first()
-
-            assert saved is not None
-            assert saved.id == user.id
-            assert saved.username == "gabriel"
-            assert saved.email == "gabriel@email.com"
-            assert saved.role == "user"
+    user_repository.save.assert_called_once()
+    unit_of_work.commit.assert_called_once()
 
 
-def test_create_user_without_authentication(db_session, app, admin_user):
-    with app.app_context():
-        with app.test_request_context():
-            logout_user()
+def test_should_not_create_user_if_users_exist_and_not_authenticated(
+    service,
+    user_repository,
+    flask_login_handler,
+    create_user_command,
+):
+    user_repository.find_all.return_value = [Mock()]
+    flask_login_handler.find_current_user_is_authenticated.return_value = False
 
-            data = {
-                "username": "joao",
-                "password": "123456",
-                "email": "joao@email.com",
-                "role": "user",
-            }
-
-            service = CreateUserService(data, db_session)
-
-            with pytest.raises(UnauthorizedError) as error:
-                service.to_execute()
-
-            assert "Sessão inválida ou expirada" in str(error.value)
+    with pytest.raises(UnauthorizedError):
+        service.to_execute(create_user_command)
 
 
-def test_create_user_with_user_role_forbidden(db_session, app, normal_user):
-    with app.app_context():
-        with app.test_request_context():
-            login_user(normal_user)
+def test_should_not_create_user_if_requester_is_not_admin(
+    service,
+    user_repository,
+    flask_login_handler,
+    create_user_command,
+):
+    user_repository.find_all.return_value = []
+    flask_login_handler.find_current_user_is_authenticated.return_value = True
+    create_user_command.requester_role = "user"
 
-            data = {
-                "username": "maria",
-                "password": "123456",
-                "email": "maria@email.com",
-                "role": "user",
-            }
-
-            service = CreateUserService(data, db_session)
-
-            with pytest.raises(ForbiddenError) as error:
-                service.to_execute()
-
-            assert "não tem permissão" in str(error.value)
+    with pytest.raises(ForbiddenError):
+        service.to_execute(create_user_command)
 
 
-def test_create_user_with_existing_username_conflict(db_session, app, admin_user):
-    with app.app_context():
-        with app.test_request_context():
-            login_user(admin_user)
+def test_should_not_create_user_if_username_already_exists(
+    service,
+    user_repository,
+    flask_login_handler,
+    create_user_command,
+):
+    user_repository.find_all.return_value = []
+    flask_login_handler.find_current_user_is_authenticated.return_value = True
+    user_repository.find_by_username.return_value = [Mock()]
+    user_repository.find_by_email.return_value = None
 
-            existing_user = User(
-                username="gabriel",
-                password=b"hash",
-                email="old@email.com",
-                role="user",
-            )
-            db_session.add(existing_user)
-            db_session.commit()
+    with pytest.raises(ConflictError):
+        service.to_execute(create_user_command)
 
-            data = {
-                "username": "gabriel",
-                "password": "123456",
-                "email": "gabriel@email.com",
-                "role": "user",
-            }
 
-            service = CreateUserService(data, db_session)
+def test_should_not_create_user_if_email_already_exists(
+    service,
+    user_repository,
+    flask_login_handler,
+    create_user_command,
+):
+    user_repository.find_all.return_value = []
+    flask_login_handler.find_current_user_is_authenticated.return_value = True
+    user_repository.find_by_username.return_value = None
+    user_repository.find_by_email.return_value = [Mock()]
 
-            with pytest.raises(ConflictError) as error:
-                service.to_execute()
-
-            assert "Já existe usuário cadastrado com esse username" in str(error.value)
+    with pytest.raises(ConflictError):
+        service.to_execute(create_user_command)

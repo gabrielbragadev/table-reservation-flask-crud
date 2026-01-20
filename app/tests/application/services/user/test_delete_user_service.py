@@ -1,110 +1,227 @@
-# run: pytest .\app\tests\services\user\test_delete_user_service.py -s -v
+# run: pytest .\app\tests\application\services\user\test_delete_user_service.py -s -v
 import pytest
-from flask_login import login_user, logout_user
+from unittest.mock import Mock
 
-from app.infrastructure.extensions import db, login_manager
-from app.domain.entities.user import User
-from app.domain.exceptions import ForbiddenError, NotFoundError
 from app.application.services.user.delete_user_service import DeleteUserService
+from app.application.commands.user.delete_user_command import DeleteUserCommand
+from app.domain.exceptions import ForbiddenError, NotFoundError
+from app.domain.entities.user import User
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
-# -------------------- FIXTURES --------------------
+# =========================
+# FIXTURES BASE
+# =========================
 
 @pytest.fixture
-def admin_user(db_session):
-    user = User(
-        username="admin",
-        password=b"hash",
-        email="admin@email.com",
-        role="admin",
-    )
-    db_session.add(user)
-    db_session.commit()
+def user():
+    user = Mock(spec=User)
+    user.id = 1
     return user
 
 
 @pytest.fixture
-def normal_user(db_session):
-    user = User(
-        username="user",
-        password=b"hash",
-        email="user@email.com",
-        role="user",
-    )
-    db_session.add(user)
-    db_session.commit()
+def other_user():
+    user = Mock(spec=User)
+    user.id = 2
     return user
 
 
 @pytest.fixture
-def target_user(db_session):
-    user = User(
-        username="target",
-        password=b"hash",
-        email="target@email.com",
-        role="user",
+def user_repository():
+    return Mock()
+
+
+@pytest.fixture
+def flask_login_handler():
+    return Mock()
+
+
+@pytest.fixture
+def unit_of_work():
+    uow = Mock()
+    uow.commit = Mock()
+    return uow
+
+
+@pytest.fixture
+def service(user_repository, flask_login_handler, unit_of_work):
+    return DeleteUserService(
+        user_repository=user_repository,
+        flask_login_handler=flask_login_handler,
+        unit_of_work=unit_of_work,
     )
-    db_session.add(user)
-    db_session.commit()
-    return user
 
 
-# -------------------- TESTES --------------------
+# =========================
+# TESTES
+# =========================
 
-def test_delete_user_success(db_session, app, admin_user, target_user):
-    with app.app_context():
-        with app.test_request_context():
-            login_user(admin_user)
+def test_delete_other_user_success(
+    service,
+    mocker,
+    user_repository,
+    unit_of_work,
+    other_user,
+):
+    # arrange
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
+        return_value=other_user,
+    )
 
-            service = DeleteUserService(target_user.id, db_session)
-            result = service.to_execute()
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        return_value=None,
+    )
 
-            assert result["id"] == target_user.id
-            assert result["username"] == "target"
-            # Confirma que o usuário foi realmente removido do banco
-            deleted = db_session.query(User).filter_by(id=target_user.id).first()
-            assert deleted is None
+    command = DeleteUserCommand(
+        user_id=2,
+        requester_user_id=1,
+        requester_role="ADMIN",
+        otp_code=None,
+    )
 
+    # act
+    result = service.to_execute(command)
 
-def test_delete_user_not_found(db_session, app, admin_user):
-    with app.app_context():
-        with app.test_request_context():
-            login_user(admin_user)
-
-            service = DeleteUserService(user_id=999, session=db_session)
-
-            with pytest.raises(NotFoundError) as error:
-                service.to_execute()
-
-            assert "Registro não encontrado" in str(error.value)
-
-
-def test_delete_user_forbidden_self(db_session, app, admin_user):
-    with app.app_context():
-        with app.test_request_context():
-            login_user(admin_user)
-
-            service = DeleteUserService(admin_user.id, db_session)
-
-            with pytest.raises(ForbiddenError) as error:
-                service.to_execute()
-
-            assert "Você não pode excluir seu próprio usuário" in str(error.value)
+    # assert
+    user_repository.delete.assert_called_once_with(other_user)
+    unit_of_work.commit.assert_called_once()
+    assert result == other_user
 
 
-def test_delete_user_forbidden_role(db_session, app, normal_user, target_user):
-    with app.app_context():
-        with app.test_request_context():
-            login_user(normal_user)
+def test_self_delete_with_valid_otp_success(
+    service,
+    mocker,
+    user_repository,
+    flask_login_handler,
+    unit_of_work,
+    user,
+):
+    # arrange
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
+        return_value=user,
+    )
 
-            service = DeleteUserService(target_user.id, db_session)
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        return_value=None,
+    )
 
-            with pytest.raises(ForbiddenError) as error:
-                service.to_execute()
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.validate_self_delete_otp",
+        return_value=None,
+    )
 
-            assert "Você não tem permissão pra realizar essa ação" in str(error.value)
+    command = DeleteUserCommand(
+        user_id=1,
+        requester_user_id=1,
+        requester_role="USER",
+        otp_code="123456",
+    )
+
+    # act
+    result = service.to_execute(command)
+
+    # assert
+    user_repository.delete.assert_called_once_with(user)
+    unit_of_work.commit.assert_called_once()
+    flask_login_handler.logout.assert_called_once()
+    assert result == user
+
+
+def test_delete_other_user_forbidden(service, mocker):
+    # arrange
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        side_effect=ForbiddenError("Operação não permitida"),
+    )
+
+    command = DeleteUserCommand(
+        user_id=2,
+        requester_user_id=1,
+        requester_role="USER",
+        otp_code=None,
+    )
+
+    # act / assert
+    with pytest.raises(ForbiddenError):
+        service.to_execute(command)
+
+
+def test_delete_user_not_found(service, mocker):
+    # arrange
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
+        side_effect=NotFoundError("Usuário não encontrado"),
+    )
+
+    command = DeleteUserCommand(
+        user_id=99,
+        requester_user_id=1,
+        requester_role="ADMIN",
+        otp_code=None,
+    )
+
+    # act / assert
+    with pytest.raises(NotFoundError):
+        service.to_execute(command)
+
+
+def test_self_delete_without_otp_fails(service, mocker, user):
+    # arrange
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
+        return_value=user,
+    )
+
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        return_value=None,
+    )
+
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.validate_self_delete_otp",
+        side_effect=ForbiddenError("OTP obrigatório"),
+    )
+
+    command = DeleteUserCommand(
+        user_id=1,
+        requester_user_id=1,
+        requester_role="USER",
+        otp_code=None,
+    )
+
+    # act / assert
+    with pytest.raises(ForbiddenError):
+        service.to_execute(command)
+
+
+def test_self_delete_with_invalid_otp_fails(service, mocker, user):
+    # arrange
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
+        return_value=user,
+    )
+
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        return_value=None,
+    )
+
+    mocker.patch(
+        "app.domain.rules.user_rules.UserRules.validate_self_delete_otp",
+        side_effect=ForbiddenError("OTP inválido"),
+    )
+
+    command = DeleteUserCommand(
+        user_id=1,
+        requester_user_id=1,
+        requester_role="USER",
+        otp_code="000000",
+    )
+
+    # act / assert
+    with pytest.raises(ForbiddenError):
+        service.to_execute(command)

@@ -32,7 +32,7 @@ def user_repository(user):
 @pytest.fixture
 def bcrypt_handler():
     bcrypt = Mock()
-    bcrypt.verify_password.return_value = True
+    bcrypt.verify_hash.return_value = True
     return bcrypt
 
 
@@ -69,7 +69,7 @@ def test_user_login_success(
     result = service.user_login(command)
 
     user_repository.find_by_username.assert_called_once_with("gabri")
-    bcrypt_handler.verify_password.assert_called_once_with(user, b"123456")
+    bcrypt_handler.verify_hash.assert_called_once_with(user, b"123456")
     flask_login_handler.login.assert_called_once_with(user)
 
     assert result == user
@@ -94,7 +94,7 @@ def test_user_login_invalid_password(
     bcrypt_handler,
     flask_login_handler,
 ):
-    bcrypt_handler.verify_password.return_value = False
+    bcrypt_handler.verify_hash.return_value = False
 
     with pytest.raises(UnauthorizedError) as exc:
         service.user_login(command)
@@ -110,7 +110,7 @@ def test_flask_login_not_called_when_password_is_invalid(
     bcrypt_handler,
     flask_login_handler,
 ):
-    bcrypt_handler.verify_password.return_value = False
+    bcrypt_handler.verify_hash.return_value = False
 
     with pytest.raises(UnauthorizedError):
         service.user_login(command)

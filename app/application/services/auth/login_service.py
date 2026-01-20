@@ -38,7 +38,7 @@ class UserLoginService:
         )
 
     def __is_password_correct(self):
-        if not self.__bcrypt_handler.verify_password(
+        if not self.__bcrypt_handler.verify_hash(
             self.__user, self.__command.dto.password
         ):
             raise UnauthorizedError(message="Credenciais Inválidas")

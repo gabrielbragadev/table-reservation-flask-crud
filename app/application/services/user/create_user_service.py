@@ -1,74 +1,63 @@
-from typing import Dict
-from sqlalchemy.orm import Session
-from app.drivers.bcrypt_handler import BcryptHandler
+from app.domain.rules.user_rules import UserRules
+from app.domain.uow.unit_of_work import UnitOfWork
+from app.drivers.interfaces.flask_login_handler_interface import (
+    FlaskLoginHandlerInterface,
+)
 
-from app.domain.exceptions import ConflictError, ForbiddenError, UnauthorizedError
 from app.domain.entities.user import User
 from app.domain.repositories.user_repository import UserRepository
-from app.drivers.flask_login_handler import FlaskLoginHandler
+
+from app.application.commands.user.create_user_command import CreateUserCommand
 
 
 class CreateUserService:
 
-    def __init__(self, data: Dict, session: Session):
-        self.__session = session
-        self.__username = data.get("username")
-        self.__password = str.encode(data.get("password"))
-        self.__email = data.get("email")
-        self.__role = data.get("role")
-        self.__user_repository = UserRepository(self.__session)
-        self.__bcrypt_handler = BcryptHandler()
-        self.__hashed = self.__bcrypt_handler.generate_password_hash(self.__password)
-        self.__flask_login_handler = FlaskLoginHandler()
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        flask_login_handler: FlaskLoginHandlerInterface,
+        unit_of_work: UnitOfWork,
+    ):
+        self.__user_repository = user_repository
+        self.__flask_login_handler = flask_login_handler
+        self.__command = None
+        self.__uow = unit_of_work
 
-    def to_execute(self) -> User:
+    def to_execute(self, command: CreateUserCommand) -> User:
 
-        self.__validate_user_creation_without_auth()
-        self.__validate_user_role_permission()
-        self.__is_username_taken()
+        self.__command = command
+
+        self.__require_auth_to_create_user_if_users_exist()
+        self.__ensure_user_role_can_create_user()
+        self.__ensure_username_is_available()
+        self.__ensure_email_is_available()
 
         user = User(
-            username=self.__username,
-            password=self.__hashed,
-            email=self.__email,
-            role=self.__role,
+            username=self.__command.data.username,
+            email=self.__command.data.email,
+            password=self.__command.data.password,
+            role=self.__command.data.role,
         )
-        self.__user_repository.create(user)
+
+        self.__user_repository.save(user)
+        self.__uow.commit()
+
         return user
 
-    def __validate_user_creation_without_auth(self) -> None:
-        registered_users = self.__user_repository.find_all()
-        current_user_is_authenticated = (
-            self.__flask_login_handler.find_current_user_is_authenticated()
+    def __require_auth_to_create_user_if_users_exist(self) -> None:
+        UserRules.validate_user_creation_without_auth(
+            self.__user_repository, self.__flask_login_handler
         )
 
-        if registered_users and not current_user_is_authenticated:
-            raise UnauthorizedError(
-                message="Sessão inválida ou expirada. Faça login novamente."
-            )
+    def __ensure_user_role_can_create_user(self) -> None:
+        UserRules.validate_user_role_permission(self.__command)
 
-    def __validate_user_role_permission(self) -> None:
-
-        current_user_is_authenticated = (
-            self.__flask_login_handler.find_current_user_is_authenticated()
+    def __ensure_username_is_available(self) -> None:
+        UserRules.validate_username_conflict(
+            self.__user_repository, self.__command.data.username
         )
 
-        if not current_user_is_authenticated:
-            return
-
-        current_user_id = self.__flask_login_handler.find_current_user_id()
-        authenticated_user = self.__user_repository.find_by_id(current_user_id)
-
-        if authenticated_user.role == "user":
-            raise ForbiddenError(
-                message="Você não tem permissão para realizar esta ação."
-            )
-
-    def __is_username_taken(self) -> None:
-        users_with_same_username = self.__user_repository.find_by_username(
-            self.__username
+    def __ensure_email_is_available(self) -> None:
+        UserRules.validate_email_conflict(
+            self.__user_repository, self.__command.data.email
         )
-        if users_with_same_username:
-            raise ConflictError(
-                message="Já existe usuário cadastrado com esse username"
-            )

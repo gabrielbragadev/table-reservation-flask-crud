@@ -20,6 +20,10 @@ class UserRepository(UserRepository):
         user = self.session.query(User).filter_by(username=username).first()
         return user
 
+    def find_by_email(self, email: str) -> User:
+        user = self.session.query(User).filter_by(email=email).first()
+        return user
+
     def find_all(self) -> List[User]:
         user = self.session.query(User).all()
         return user

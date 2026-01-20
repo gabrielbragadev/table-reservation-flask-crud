@@ -1,44 +1,57 @@
 from typing import Dict
-from sqlalchemy.orm import Session
 
 from app.domain.exceptions import ForbiddenError, NotFoundError
 from app.domain.entities.user import User
 from app.domain.repositories.user_repository import UserRepository
-from app.drivers.flask_login_handler import FlaskLoginHandler
+from app.domain.uow.unit_of_work import UnitOfWork
+from app.drivers.interfaces.flask_login_handler_interface import (
+    FlaskLoginHandlerInterface,
+)
+from app.application.commands.user.delete_user_command import DeleteUserCommand
+from app.domain.rules.user_rules import UserRules
 
 
 class DeleteUserService:
-    def __init__(self, user_id: int, session: Session) -> None:
-        self.__session = session
-        self.__user_repository = UserRepository(self.__session)
-        self.__flask_login_handler = FlaskLoginHandler()
-        self.__user_id = user_id
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        flask_login_handler: FlaskLoginHandlerInterface,
+        unit_of_work: UnitOfWork,
+    ) -> None:
+        self.__user_repository = user_repository
+        self.__flask_login_handler = flask_login_handler
+        self.__command = None
+        self.__user_to_delete = None
+        self.__uow = unit_of_work
 
-    def to_execute(self) -> Dict[User]:
-        self.__user = self.__user_repository.find_by_id(self.__user_id)
-        self.__current_user_id = self.__flask_login_handler.find_current_user_id()
+    def to_execute(self, command: DeleteUserCommand) -> Dict[User]:
+        self.__command = command
+        self.get_user_to_delete()
 
-        self.__validate_not_modifying_self()
-        self.__validate_user_cannot_delete_others()
-        self.__check_user_exists()
+        UserRules.validate_user_cannot_delete_others(self.__command)
+        self.get_user_to_delete()
 
-        self.__user_repository.delete(self.__user)
-        return self.__user.to_dict()
+        self.__validate_self_delete_otp()
 
-    def __validate_not_modifying_self(self) -> None:
-        if self.__current_user_id == self.__user_id:
-            raise ForbiddenError(
-                message="Você não pode excluir seu próprio usuário enquanto estiver logado"
+        self.__user_repository.delete(self.__user_to_delete)
+        self.__uow.commit()
+
+        if self.__is_self_delete():
+            self.__flask_login_handler.logout()
+
+        return self.__user_to_delete
+
+    def get_user_to_delete(self) -> None:
+        self.__user_to_delete = UserRules.get_and_validate_user_to_delete(
+            self.__user_repository, self.__command.user_id
+        )
+
+    def __is_self_delete(self) -> bool:
+        return self.__command.user_id == self.__command.requester_user_id
+
+    def __validate_self_delete_otp(self):
+        if self.__is_self_delete():
+            UserRules.validate_self_delete_otp(
+                self.__user_to_delete,
+                self.__command.otp_code,
             )
-
-    def __validate_user_cannot_delete_others(self) -> None:
-        authenticated_user = self.__user_repository.find_by_id(self.__current_user_id)
-
-        if authenticated_user.role == "user":
-            raise ForbiddenError(
-                message="Você não tem permissão pra realizar essa ação"
-            )
-
-    def __check_user_exists(self):
-        if self.__user is None:
-            raise NotFoundError("Registro não encontrado")
