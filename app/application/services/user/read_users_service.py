@@ -1,22 +1,28 @@
-from flask import abort, jsonify
-from flask_login import current_user
+from app.application.commands.user.read_users_command import ReadUsersCommand
+from app.application.dtos.user.read_user_dto import ReadUserDTO
+from app.application.dtos.user.read_users_dto import ReadUsersDTO
 
-from ...models.user import User
+from app.domain.exceptions import NotFoundError
+from app.domain.repositories.user_repository import UserRepository
+from app.domain.rules.user_rules import UserRules
 
 
-def get_users_service():
-    authenticated_user = User.query.filter_by(id=current_user.id).first()
+class GetUsersServices:
+    def __init__(self, user_repository: UserRepository) -> ReadUsersDTO:
+        self.__user_repository = user_repository
+        self.__users = None
 
-    if authenticated_user.role == "user":
-        abort(403)
+    def to_execute(self, command: ReadUsersCommand):
+        self.__get_all_users()
 
-    users = User.query.all()
+        UserRules.validate_user_role_permission(command)
 
-    if users is None:
-        abort(404)
+        dtos = [ReadUserDTO(u.username, u.email, u.role) for u in self.__users]
 
-    response = [
-        {"id": u.id, "username": u.username, "email": u.email, "role": u.role}
-        for u in users
-    ]
-    return jsonify(response)
+        return ReadUsersDTO(users=dtos)
+
+    def __get_all_users(self) -> None:
+        self.__users = self.__user_repository.find_all()
+
+        if self.__users is None:
+            raise NotFoundError(message="Nenhum registro encontrado")

@@ -6,7 +6,7 @@ from app.domain.rules.user_rules import UserRules
 
 
 class GetUserService:
-    def __init__(self, user_repository: UserRepository) -> None:
+    def __init__(self, user_repository: UserRepository) -> User:
         self.__user_repository = user_repository
 
     def to_execute(self, command: ReadUserCommand) -> User:
