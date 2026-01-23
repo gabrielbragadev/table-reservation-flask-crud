@@ -70,7 +70,7 @@ def test_delete_other_user_success(
     )
 
     mocker.patch(
-        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_view_others",
         return_value=None,
     )
 
@@ -105,7 +105,7 @@ def test_self_delete_with_valid_otp_success(
     )
 
     mocker.patch(
-        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_view_others",
         return_value=None,
     )
 
@@ -134,7 +134,7 @@ def test_self_delete_with_valid_otp_success(
 def test_delete_other_user_forbidden(service, mocker):
     # arrange
     mocker.patch(
-        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_view_others",
         side_effect=ForbiddenError("Operação não permitida"),
     )
 
@@ -177,7 +177,7 @@ def test_self_delete_without_otp_fails(service, mocker, user):
     )
 
     mocker.patch(
-        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_view_others",
         return_value=None,
     )
 
@@ -206,7 +206,7 @@ def test_self_delete_with_invalid_otp_fails(service, mocker, user):
     )
 
     mocker.patch(
-        "app.domain.rules.user_rules.UserRules.validate_user_cannot_delete_others",
+        "app.domain.rules.user_rules.UserRules.validate_user_cannot_view_others",
         return_value=None,
     )
 

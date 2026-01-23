@@ -1,6 +1,7 @@
 import pyotp
 from app.application.commands.user.create_user_command import CreateUserCommand
 from app.application.commands.user.delete_user_command import DeleteUserCommand
+from app.application.commands.user.user_ownership_command import UserOwnershipCommand
 from app.domain.entities.user import User
 from app.domain.exceptions import (
     ConflictError,
@@ -40,7 +41,7 @@ class UserRules:
             )
 
     @staticmethod
-    def validate_user_cannot_delete_others(command: DeleteUserCommand) -> None:
+    def validate_user_cannot_view_others(command: UserOwnershipCommand) -> None:
         if command.user_id != command.requester_user_id:
             UserRules.validate_user_role_permission(command)
 

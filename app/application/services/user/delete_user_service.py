@@ -28,7 +28,7 @@ class DeleteUserService:
         self.__command = command
         self.get_user_to_delete()
 
-        UserRules.validate_user_cannot_delete_others(self.__command)
+        UserRules.validate_user_cannot_view_others(self.__command)
         self.get_user_to_delete()
 
         self.__validate_self_delete_otp()
