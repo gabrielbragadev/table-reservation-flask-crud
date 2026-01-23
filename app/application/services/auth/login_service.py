@@ -23,14 +23,18 @@ class UserLoginService:
         self.__command = None
         self.__user_repository = user_repository
 
-    def user_login(self, command: UserLoginCommand) -> None:
+    def user_login(self, command: UserLoginCommand, request) -> None:
         self.__command = command
 
+        self.__has_active_session(request)
         self.__get_user_by_username()
         self.__is_password_correct()
 
         self.__flask_login_handler.login(self.__user)
         return self.__user
+
+    def __has_active_session(self, request):
+        AuthRules.has_active_session(request)
 
     def __get_user_by_username(self) -> None:
         self.__user = AuthRules.resolve_user_by_username(

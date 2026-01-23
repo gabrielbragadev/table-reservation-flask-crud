@@ -73,7 +73,7 @@ class UserRules:
         if not otp_code:
             raise UnauthorizedError(message="Código 2FA é obrigatório")
 
-        totp = pyotp.TOTP(user.otp_secret)
+        totp = pyotp.TOTP(user.two_fa_secret)
 
         if not totp.verify(otp_code, valid_window=1):
             raise UnauthorizedError(message="Código 2FA inválido ou expirado")

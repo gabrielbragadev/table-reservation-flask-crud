@@ -1,23 +1,34 @@
-from flask import jsonify
+from flask import jsonify, request
+from flask_login import login_required
+from app.infrastructure.persistence.sqlalchemy.unit_of_work import SqlAlchemyUnitOfWork
+from app.drivers.flask_login_handler import FlaskLoginHandler
 from app.infrastructure.extensions import db
-
-from app.domain.exceptions import (
-    ForbiddenError,
-    NotFoundError,
-)
 from app.application.services.user.delete_user_service import DeleteUserService
 from app.interfaces.http.controllers.user_controllers import users_bp
+from app.infrastructure.persistence.sqlalchemy.user_repository import UserRepository
+from app.application.commands.user.delete_user_command import DeleteUserCommand
 
 
 @users_bp.route("/<int:user_id>", methods=["DELETE"])
-def create_user(user_id: int):
-    try:
-        service = DeleteUserService(user_id, db.session)
-        service.to_execute()
-        return jsonify({"message": "Usuário excluído com sucesso"}), 200
-    except ForbiddenError as error:
-        return jsonify({"error": error.message}, 403)
-    except NotFoundError as error:
-        return jsonify({"error": error.message}), 404
-    except Exception as error:
-        return jsonify({"error": str(error)}), 500
+@login_required
+def delete_user(user_id: int):
+
+    data = request.get_json(silent=True) or {}
+    
+
+    user_repository = UserRepository(db.session)
+    login_handler = FlaskLoginHandler()
+    unit_of_work = SqlAlchemyUnitOfWork(db.session)
+
+    current_user = user_repository.find_by_id(login_handler.find_current_user_id())
+
+    command = DeleteUserCommand(
+        user_id=user_id,
+        requester_user_id=current_user.id,
+        requester_role=current_user.role,
+        otp_code=data.get("otp_code"),
+    )
+
+    service = DeleteUserService(user_repository, login_handler, unit_of_work)
+    service.to_execute(command)
+    return jsonify({"message": "Usuário excluído com sucesso"}), 200

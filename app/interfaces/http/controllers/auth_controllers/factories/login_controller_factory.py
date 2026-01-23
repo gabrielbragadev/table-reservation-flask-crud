@@ -29,4 +29,5 @@ def login_controller_factory() -> Dict[object]:
         "data": data,
         "dto": dto,
         "command": command,
+        "request": request
     }

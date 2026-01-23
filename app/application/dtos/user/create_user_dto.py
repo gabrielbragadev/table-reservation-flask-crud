@@ -4,10 +4,10 @@ from app.drivers.interfaces.bcrypt_handler_interface import BcryptHandlerInterfa
 
 @dataclass()
 class CreateUserDTO:
-    username: int
-    password: int
-    email: int
-    role: int
+    username: str
+    password: str
+    email: str
+    role: str
 
     def encode_and_hashed_password(
         self, bcrypt_handler: BcryptHandlerInterface

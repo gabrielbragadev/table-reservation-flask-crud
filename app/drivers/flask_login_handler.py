@@ -19,6 +19,8 @@ class FlaskLoginHandler:
         return is_user_authenticated
 
     def find_current_user_id(self) -> int:
+        if not self.is_authenticated():
+            return None
         return current_user.id
 
     def find_current_user_is_authenticated(self) -> bool:

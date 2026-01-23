@@ -12,6 +12,7 @@ class BcryptHandler(BcryptHandlerInterface):
         return self.__bcrypt.hashpw(password, self.__bcrypt.gensalt())
 
     def verify_hash(self, user: User, password: bytes) -> bool:
+        user.to_password_encode()
         verify_hash = self.__bcrypt.checkpw(password, user.password)
 
         return verify_hash

@@ -19,3 +19,6 @@ class User(db.Model, UserMixin):
             "email": self.email,
             "role": self.role,
         }
+
+    def to_password_encode(self):
+        self.password = str.encode(self.password)
