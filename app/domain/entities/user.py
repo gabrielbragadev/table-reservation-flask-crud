@@ -10,7 +10,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(320), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(80), nullable=False, default="user")
-    two_fa_secret = db.Column(db.String(80), unique=True)
+    two_fa_secret = db.Column(db.String(512), unique=True)
 
     def to_dict(self) -> Dict:
         return {

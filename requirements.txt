@@ -6,3 +6,6 @@ Werkzeug==3.1.4
 requests==2.32.5
 pytest==9.0.2
 marshmallow==4.1.1
+bcrypt==5.0.0
+cryptocode==0.1
+python-dotenv==1.2.1
