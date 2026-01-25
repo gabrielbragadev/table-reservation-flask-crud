@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 
-from app.domain.errors import register_error_handlers
+
+from app.domain.error_controller import register_error_handlers
 from app.interfaces.http.controllers import register_routes
 from app.infrastructure.config import Config
 from app.infrastructure.extensions import db, login_manager, socketio

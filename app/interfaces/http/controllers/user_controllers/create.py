@@ -1,6 +1,5 @@
 from flask import jsonify
 
-from app.domain.exceptions import ConflictError, ForbiddenError, UnauthorizedError
 from app.application.services.user.create_user_service import CreateUserService
 from app.interfaces.http.controllers.user_controllers.factories.create_controller_factory import (
     create_controller_factory,
@@ -18,5 +17,6 @@ def create_user():
         factory["login_handler"],
         factory["unit_of_work"],
     )
+
     service.to_execute(factory["command"])
     return jsonify({"message": "Usuário criado com sucesso"}), 201
