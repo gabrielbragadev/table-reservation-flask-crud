@@ -1,6 +1,7 @@
 import pyotp
 from app.application.commands.user.create_user_command import CreateUserCommand
 from app.application.commands.user.delete_user_command import DeleteUserCommand
+from app.application.commands.user.update_user_command import UpdateUserCommand
 from app.application.commands.user.user_ownership_command import UserOwnershipCommand
 from app.domain.entities.user import User
 from app.domain.exceptions import (
@@ -46,6 +47,13 @@ class UserRules:
             UserRules.validate_user_role_permission(command)
 
     @staticmethod
+    def validate_user_cannot_update_others(
+        user: User, command: UpdateUserCommand
+    ) -> None:
+        if user.id != command.requester_user_id:
+            UserRules.validate_user_role_permission(command)
+
+    @staticmethod
     def validate_username_conflict(user_repository: UserRepository, username: str):
         users_with_same_username = user_repository.find_by_username(username)
         if users_with_same_username:
@@ -67,6 +75,17 @@ class UserRules:
 
         if user is None:
             raise NotFoundError(message="Registro não encontrado")
+        return user
+
+    @staticmethod
+    def get_user_to_be_changed(
+        user_repository: UserRepository, command: UpdateUserCommand
+    ) -> User:
+        user = user_repository.find_by_id(command.user_id)
+
+        if user is None:
+            user = user_repository.find_by_id(command.requester_user_id)
+
         return user
 
     @staticmethod

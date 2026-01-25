@@ -1,64 +1,77 @@
-import bcrypt
-
-from flask import abort, jsonify
-from flask_login import current_user
-
-from app.domain.exceptions import ConflictError
-from app.infrastructure.extensions import db
+from app.application.commands.user.update_user_command import UpdateUserCommand
 from app.domain.entities.user import User
+from app.domain.repositories.user_repository import UserRepository
+from app.domain.rules.user_rules import UserRules
+from app.drivers.interfaces.bcrypt_handler_interface import BcryptHandlerInterface
+from app.infrastructure.persistence.sqlalchemy.unit_of_work import UnitOfWork
 
 
-def update_user(data, user_id):
+class UpdateUserService:
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        bcrypt_handler: BcryptHandlerInterface,
+        unit_of_work: UnitOfWork,
+    ):
+        self.__user_repository = user_repository
+        self.__bcrypt_handler = bcrypt_handler
+        self.__command = None
+        self.__user_to_be_changed = None
+        self.__hash_password = None
+        self.__uow = unit_of_work
 
-    username = data.get("username")
-    user_identical_usernames = User.query.filter_by(username=username).first()
+    def to_execute(self, command: UpdateUserCommand) -> User:
 
-    password = str.encode(data.get("password"))
+        self.__command = command
 
-    email = data.get("email")
-    user_identical_emails = User.query.filter_by(email=email).first()
+        self.__generate_password_hash()
+        self.__get_user_to_be_changed()
 
-    role = data.get("role")
+        self.__ensure_user_cannot_edit_others()
+        self.__is_username_taken()
+        self.__is_email_taken()
 
-    hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+        self.__ensure_role_edit_permission()
+        self.__user_to_be_changed.role = self.__command.dto.role
 
-    authenticated_user = User.query.filter_by(id=current_user.id).first()
+        if self.__command.dto.username:
+            self.__user_to_be_changed.username = self.__command.dto.username
 
-    user_to_be_changed = User.query.filter_by(id=user_id).first()
+        if self.__command.dto.password:
+            self.__user_to_be_changed.password = self.__hash_password
 
-    if authenticated_user.role == "user":
-        if user_id != current_user.id:
-            abort(403)
+        if self.__command.dto.email:
+            self.__user_to_be_changed.email = self.__command.dto.email
 
-    if user_identical_usernames:
-        raise ConflictError("Nome de usuário já existe")
+        self.__uow.commit()
 
-    if user_identical_emails:
-        raise ConflictError("E-mail já existe")
+        return self.__user_to_be_changed
 
-        if username:
-            authenticated_user.username = username
-        if password:
-            authenticated_user.password = hashed
-        if email:
-            authenticated_user.email = email
+    def __get_user_to_be_changed(self) -> None:
+        self.__user_to_be_changed = UserRules.get_user_to_be_changed(
+            self.__user_repository, self.__command
+        )
 
-        db.session.commit()
+    def __generate_password_hash(self) -> None:
+        self.__hash_password = self.__bcrypt_handler.generate_hash(
+            self.__command.dto.password
+        )
 
-        return jsonify({"message": "Registro alterado com sucesso"})
+    def __is_username_taken(self) -> None:
+        UserRules.validate_username_conflict(
+            self.__user_repository, self.__command.dto.username
+        )
 
-    if user_to_be_changed is None:
-        abort(404)
+    def __is_email_taken(self) -> None:
+        UserRules.validate_email_conflict(
+            self.__user_repository, self.__command.dto.email
+        )
 
-    if username:
-        user_to_be_changed.username = username
-    if password:
-        user_to_be_changed.password = hashed
-    if email:
-        user_to_be_changed.email = email
-    if role:
-        user_to_be_changed.role = role
+    def __ensure_user_cannot_edit_others(self) -> None:
+        UserRules.validate_user_cannot_update_others(
+            self.__user_to_be_changed, self.__command
+        )
 
-    db.session.commit()
-
-    return jsonify({"message": "Registro alterado com sucesso"})
+    def __ensure_role_edit_permission(self):
+        if self.__command.dto.role:
+            UserRules.validate_user_role_permission(self.__command)
