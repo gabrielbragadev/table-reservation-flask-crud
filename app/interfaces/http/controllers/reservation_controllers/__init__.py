@@ -7,3 +7,4 @@ from app.interfaces.http.controllers.reservation_controllers import create
 from app.interfaces.http.controllers.reservation_controllers import read
 from app.interfaces.http.controllers.reservation_controllers import read_all
 from app.interfaces.http.controllers.reservation_controllers import cancel
+from app.interfaces.http.controllers.reservation_controllers import update
