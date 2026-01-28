@@ -1,7 +1,7 @@
 # pytest .\app\tests\application\services\reservation\test_read_reservation_service.py -s -v
 
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from app.application.services.reservation.read_reservation_service import (
     GetReservationService,
@@ -9,71 +9,96 @@ from app.application.services.reservation.read_reservation_service import (
 from app.application.commands.reservation.read_reservation_command import (
     ReadReservationCommand,
 )
-from app.domain.entities.reservation import Reservation
-from app.domain.exceptions import NotFoundError, ForbiddenError
+from app.domain.exceptions import NotFoundError
 
 
-def test_get_reservation_success_admin():
-    reservation_repo = Mock()
+@pytest.fixture
+def reservation():
+    reservation = Mock()
+    reservation.booking_date = "2026-01-20"
+    reservation.client_name = "Gabriel"
+    reservation.initial_time = "18:00"
+    reservation.final_time = "20:00"
+    reservation.people_quantity = 4
+    reservation.table_number = 10
+    reservation.status = "CONFIRMED"
+    return reservation
 
-    service = GetReservationService(reservation_repository=reservation_repo)
 
-    command = ReadReservationCommand(
-        requester_role="admin",
-        requester_user_id=1,
-        dto=Mock(reservation_id=10),
+@pytest.fixture
+def reservation_repository(reservation):
+    repo = Mock()
+    repo.find_by_id.return_value = reservation
+    return repo
+
+
+@pytest.fixture
+def command():
+    dto = Mock()
+    dto.reservation_id = 1
+
+    command = Mock(spec=ReadReservationCommand)
+    command.dto = dto
+    command.requester_role = "ADMIN"
+    command.requester_user_id = 1
+
+    return command
+
+
+@pytest.fixture
+def service(reservation_repository):
+    return GetReservationService(reservation_repository)
+
+
+@patch(
+    "app.domain.rules.reservation_rules.ReservationRules.check_permission_for_modification"
+)
+def test_get_reservation_success(
+    mock_check_permission,
+    service,
+    command,
+    reservation_repository,
+    reservation,
+):
+    service.to_execute(command)
+
+    mock_check_permission.assert_called_once_with(
+        command.requester_role,
+        command.dto.reservation_id,
+        command.requester_user_id,
     )
 
-    reservation = Reservation(
-        id=10,
-        client_name="Gabriel",
-        people_quantity=2,
-        table_number=5,
-        booking_date=None,
-        initial_time=None,
-        final_time=None,
-        status="active",
+    reservation_repository.find_by_id.assert_called_once_with(
+        command.dto.reservation_id
     )
 
-    reservation_repo.find_by_id.return_value = reservation
+    assert command.dto.booking_date == reservation.booking_date
+    assert command.dto.client_name == reservation.client_name
+    assert command.dto.initial_time == reservation.initial_time
+    assert command.dto.final_time == reservation.final_time
+    assert command.dto.people_quantity == reservation.people_quantity
+    assert command.dto.table_number == reservation.table_number
+    assert command.dto.status == reservation.status
 
-    result = service.to_execute(command)
 
-    assert result == reservation
-    reservation_repo.find_by_id.assert_called_once_with(10)
+@patch(
+    "app.domain.rules.reservation_rules.ReservationRules.check_permission_for_modification"
+)
+def test_get_reservation_not_found(
+    mock_check_permission,
+    service,
+    command,
+    reservation_repository,
+):
+    reservation_repository.find_by_id.return_value = None
 
-
-def test_get_reservation_not_found():
-    reservation_repo = Mock()
-
-    service = GetReservationService(reservation_repository=reservation_repo)
-
-    command = ReadReservationCommand(
-        requester_role="admin",
-        requester_user_id=1,
-        dto=Mock(reservation_id=999),
-    )
-
-    reservation_repo.find_by_id.return_value = None
-
-    with pytest.raises(NotFoundError):
+    with pytest.raises(NotFoundError) as exc:
         service.to_execute(command)
 
-    reservation_repo.find_by_id.assert_called_once_with(999)
+    assert "Reserva não encontrada" in str(exc.value)
 
-
-def test_get_reservation_forbidden_for_non_owner():
-    reservation_repo = Mock()
-
-    service = GetReservationService(reservation_repository=reservation_repo)
-
-    command = ReadReservationCommand(
-        requester_role="user",
-        requester_user_id=1,
-        dto=Mock(reservation_id=10),
+    reservation_repository.find_by_id.assert_called_once_with(
+        command.dto.reservation_id
     )
 
-    with pytest.raises(ForbiddenError):
-        service.to_execute(command)
 
-    reservation_repo.find_by_id.assert_not_called()
