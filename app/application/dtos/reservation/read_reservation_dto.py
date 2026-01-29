@@ -1,18 +1,18 @@
 from dataclasses import dataclass
 from datetime import date, time
-from typing import Dict, Optional
+from typing import Dict
 
 
 @dataclass(frozen=True)
 class ReadReservationDTO:
     reservation_id: int
-    client_name: Optional[str] = None
-    people_quantity: Optional[int] = None
-    table_number: Optional[int] = None
-    booking_date: Optional[date] = None
-    initial_time: Optional[time] = None
-    final_time: Optional[time] = None
-    status: Optional[str] = None
+    client_name: str
+    people_quantity: int
+    table_number: int
+    booking_date: date
+    initial_time: time
+    final_time: time
+    status: str
 
     def to_dict(self) -> Dict:
         return {
