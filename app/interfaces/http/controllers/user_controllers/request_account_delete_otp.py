@@ -1,14 +1,12 @@
 from flask import jsonify
 from flask_login import login_required
-from app.infrastructure.persistence.sqlalchemy.unit_of_work import SqlAlchemyUnitOfWork
-from app.drivers.flask_login_handler import FlaskLoginHandler
-from app.drivers.cryptocode_handler import CryptocodeHandler
 
-from app.infrastructure.extensions import db
 from app.interfaces.http.controllers.user_controllers import users_bp
-from app.infrastructure.persistence.sqlalchemy.user_repository import UserRepository
 from app.application.services.user.request_delete_account_service import (
     RequestDeleteAccountService,
+)
+from app.interfaces.http.controllers.user_controllers.factories.request_account_delete_otp_factory import (
+    generation_delete_acc_otp_factory,
 )
 
 
@@ -16,13 +14,10 @@ from app.application.services.user.request_delete_account_service import (
 @login_required
 def generation_delete_acc_otp():
 
-    user_repository = UserRepository(db.session)
-    login_handler = FlaskLoginHandler()
-    unit_of_work = SqlAlchemyUnitOfWork(db.session)
-    cryptocode_handler = CryptocodeHandler()
+    factory = generation_delete_acc_otp_factory()
 
-    current_user = user_repository.find_by_id(login_handler.find_current_user_id())
-
-    service = RequestDeleteAccountService(unit_of_work, cryptocode_handler)
-    response = service.request_account_delete_otp(current_user)
+    service = RequestDeleteAccountService(
+        factory["unit_of_work"], factory["cryptocode_handler"]
+    )
+    response = service.request_account_delete_otp(factory["current_user"])
     return jsonify(response), 200

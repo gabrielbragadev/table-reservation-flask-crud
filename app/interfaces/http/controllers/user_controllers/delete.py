@@ -7,28 +7,19 @@ from app.application.services.user.delete_user_service import DeleteUserService
 from app.interfaces.http.controllers.user_controllers import users_bp
 from app.infrastructure.persistence.sqlalchemy.user_repository import UserRepository
 from app.application.commands.user.delete_user_command import DeleteUserCommand
+from app.interfaces.http.controllers.user_controllers.factories.delete_controller_factory import (
+    delete_controller_factory,
+)
 
 
 @users_bp.route("/<int:user_id>", methods=["DELETE"])
 @login_required
 def delete_user(user_id: int):
 
-    data = request.get_json(silent=True) or {}
-    
+    factory = delete_controller_factory(user_id)
 
-    user_repository = UserRepository(db.session)
-    login_handler = FlaskLoginHandler()
-    unit_of_work = SqlAlchemyUnitOfWork(db.session)
-
-    current_user = user_repository.find_by_id(login_handler.find_current_user_id())
-
-    command = DeleteUserCommand(
-        user_id=user_id,
-        requester_user_id=current_user.id,
-        requester_role=current_user.role,
-        otp_code=data.get("otp_code"),
+    service = DeleteUserService(
+        factory["user_repository"], factory["login_handler"], factory["unit_of_work"]
     )
-
-    service = DeleteUserService(user_repository, login_handler, unit_of_work)
-    service.to_execute(command)
+    service.to_execute(factory["command"])
     return jsonify({"message": "Usuário excluído com sucesso"}), 200
