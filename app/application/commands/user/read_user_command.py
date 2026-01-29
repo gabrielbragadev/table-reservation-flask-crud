@@ -8,7 +8,7 @@ class ReadUserCommand:
     user_id: int
     requester_role: str
     requester_user_id: int
-    dto: ReadUserDTO
 
+    dto: ReadUserDTO | None = None
     date_from: date | None = None
     date_to: date | None = None
