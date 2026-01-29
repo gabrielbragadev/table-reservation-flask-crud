@@ -7,7 +7,7 @@ from app.domain.repositories.user_repository import UserRepository
 from app.domain.rules.user_rules import UserRules
 
 
-class GetUsersServices:
+class GetUsersService:
     def __init__(self, user_repository: UserRepository) -> ReadUsersDTO:
         self.__user_repository = user_repository
         self.__users = None
@@ -17,7 +17,7 @@ class GetUsersServices:
 
         UserRules.validate_user_role_permission(command)
 
-        dtos = [ReadUserDTO(u.username, u.email, u.role) for u in self.__users]
+        dtos = [ReadUserDTO(u.id, u.username, u.email, u.role) for u in self.__users]
 
         return ReadUsersDTO(users=dtos)
 
