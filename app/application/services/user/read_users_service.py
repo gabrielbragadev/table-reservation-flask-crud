@@ -8,11 +8,11 @@ from app.domain.rules.user_rules import UserRules
 
 
 class GetUsersService:
-    def __init__(self, user_repository: UserRepository) -> ReadUsersDTO:
+    def __init__(self, user_repository: UserRepository) -> None:
         self.__user_repository = user_repository
         self.__users = None
 
-    def to_execute(self, command: ReadUsersCommand):
+    def to_execute(self, command: ReadUsersCommand) -> ReadUsersDTO:
         self.__get_all_users()
 
         UserRules.validate_user_role_permission(command)

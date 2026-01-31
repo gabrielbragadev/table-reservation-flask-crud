@@ -33,7 +33,9 @@ def user_repository():
 
 @pytest.fixture
 def flask_login_handler():
-    return Mock()
+    handler = Mock()
+    handler.logout = Mock()
+    return handler
 
 
 @pytest.fixture
@@ -44,11 +46,22 @@ def unit_of_work():
 
 
 @pytest.fixture
-def service(user_repository, flask_login_handler, unit_of_work):
+def cryptocode_handler():
+    return Mock()
+
+
+@pytest.fixture
+def service(
+    user_repository,
+    flask_login_handler,
+    unit_of_work,
+    cryptocode_handler,
+):
     return DeleteUserService(
         user_repository=user_repository,
         flask_login_handler=flask_login_handler,
         unit_of_work=unit_of_work,
+        cryptocode_handler=cryptocode_handler,
     )
 
 
@@ -63,7 +76,6 @@ def test_delete_other_user_success(
     unit_of_work,
     other_user,
 ):
-    # arrange
     mocker.patch(
         "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
         return_value=other_user,
@@ -81,10 +93,8 @@ def test_delete_other_user_success(
         otp_code=None,
     )
 
-    # act
     result = service.to_execute(command)
 
-    # assert
     user_repository.delete.assert_called_once_with(other_user)
     unit_of_work.commit.assert_called_once()
     assert result == other_user
@@ -98,7 +108,6 @@ def test_self_delete_with_valid_otp_success(
     unit_of_work,
     user,
 ):
-    # arrange
     mocker.patch(
         "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
         return_value=user,
@@ -121,10 +130,8 @@ def test_self_delete_with_valid_otp_success(
         otp_code="123456",
     )
 
-    # act
     result = service.to_execute(command)
 
-    # assert
     user_repository.delete.assert_called_once_with(user)
     unit_of_work.commit.assert_called_once()
     flask_login_handler.logout.assert_called_once()
@@ -132,7 +139,6 @@ def test_self_delete_with_valid_otp_success(
 
 
 def test_delete_other_user_forbidden(service, mocker):
-    # arrange
     mocker.patch(
         "app.domain.rules.user_rules.UserRules.validate_user_cannot_view_others",
         side_effect=ForbiddenError("Operação não permitida"),
@@ -145,13 +151,11 @@ def test_delete_other_user_forbidden(service, mocker):
         otp_code=None,
     )
 
-    # act / assert
     with pytest.raises(ForbiddenError):
         service.to_execute(command)
 
 
 def test_delete_user_not_found(service, mocker):
-    # arrange
     mocker.patch(
         "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
         side_effect=NotFoundError("Usuário não encontrado"),
@@ -164,13 +168,11 @@ def test_delete_user_not_found(service, mocker):
         otp_code=None,
     )
 
-    # act / assert
     with pytest.raises(NotFoundError):
         service.to_execute(command)
 
 
 def test_self_delete_without_otp_fails(service, mocker, user):
-    # arrange
     mocker.patch(
         "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
         return_value=user,
@@ -193,13 +195,11 @@ def test_self_delete_without_otp_fails(service, mocker, user):
         otp_code=None,
     )
 
-    # act / assert
     with pytest.raises(ForbiddenError):
         service.to_execute(command)
 
 
 def test_self_delete_with_invalid_otp_fails(service, mocker, user):
-    # arrange
     mocker.patch(
         "app.domain.rules.user_rules.UserRules.get_and_validate_user_to_delete",
         return_value=user,
@@ -222,6 +222,5 @@ def test_self_delete_with_invalid_otp_fails(service, mocker, user):
         otp_code="000000",
     )
 
-    # act / assert
     with pytest.raises(ForbiddenError):
         service.to_execute(command)

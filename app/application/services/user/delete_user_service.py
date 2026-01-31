@@ -1,6 +1,5 @@
 from typing import Dict
 
-from app.domain.exceptions import ForbiddenError, NotFoundError
 from app.domain.entities.user import User
 from app.domain.repositories.user_repository import UserRepository
 from app.domain.uow.unit_of_work import UnitOfWork

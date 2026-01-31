@@ -34,14 +34,10 @@ def reservation_repository(reservation):
 
 @pytest.fixture
 def command():
-    dto = Mock()
-    dto.reservation_id = 1
-
     command = Mock(spec=ReadReservationCommand)
-    command.dto = dto
+    command.reservation_id = 1
     command.requester_role = "ADMIN"
     command.requester_user_id = 1
-
     return command
 
 
@@ -60,25 +56,27 @@ def test_get_reservation_success(
     reservation_repository,
     reservation,
 ):
-    service.to_execute(command)
+    result = service.to_execute(command)
 
     mock_check_permission.assert_called_once_with(
         command.requester_role,
-        command.dto.reservation_id,
+        command.reservation_id,
         command.requester_user_id,
     )
 
     reservation_repository.find_by_id.assert_called_once_with(
-        command.dto.reservation_id
+        command.reservation_id
     )
 
-    assert command.dto.booking_date == reservation.booking_date
-    assert command.dto.client_name == reservation.client_name
-    assert command.dto.initial_time == reservation.initial_time
-    assert command.dto.final_time == reservation.final_time
-    assert command.dto.people_quantity == reservation.people_quantity
-    assert command.dto.table_number == reservation.table_number
-    assert command.dto.status == reservation.status
+    assert result == {
+        "booking_date": reservation.booking_date,
+        "client_name": reservation.client_name,
+        "initial_time": reservation.initial_time,
+        "final_time": reservation.final_time,
+        "people_quantity": reservation.people_quantity,
+        "table_number": reservation.table_number,
+        "status": reservation.status,
+    }
 
 
 @patch(
@@ -98,7 +96,5 @@ def test_get_reservation_not_found(
     assert "Reserva não encontrada" in str(exc.value)
 
     reservation_repository.find_by_id.assert_called_once_with(
-        command.dto.reservation_id
+        command.reservation_id
     )
-
-
