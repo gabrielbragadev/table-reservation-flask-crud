@@ -8,6 +8,7 @@ class UpdateUserDTO:
     password: Optional[str] = None
     email: Optional[str] = None
     role: Optional[str] = None
+    
 
     def to_dict(self) -> Dict:
         return {
@@ -19,3 +20,5 @@ class UpdateUserDTO:
             }.items()
             if v is not None
         }
+        
+        
