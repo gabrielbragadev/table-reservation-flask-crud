@@ -6,6 +6,7 @@ from app.drivers.flask_login_handler import FlaskLoginHandler
 from app.infrastructure.persistence.sqlalchemy.unit_of_work import SqlAlchemyUnitOfWork
 from app.infrastructure.persistence.sqlalchemy.user_repository import UserRepository
 from app.infrastructure.extensions import db
+from app.drivers.cryptocode_handler import CryptocodeHandler
 
 
 def delete_controller_factory(user_id: int) -> Dict[object]:
@@ -14,6 +15,7 @@ def delete_controller_factory(user_id: int) -> Dict[object]:
     user_repository = UserRepository(db.session)
     login_handler = FlaskLoginHandler()
     unit_of_work = SqlAlchemyUnitOfWork(db.session)
+    cryptocode_handler = CryptocodeHandler()
 
     current_user = user_repository.find_by_id(login_handler.find_current_user_id())
 
@@ -29,4 +31,5 @@ def delete_controller_factory(user_id: int) -> Dict[object]:
         "login_handler": login_handler,
         "unit_of_work": unit_of_work,
         "command": command,
+        "cryptocode_handler": cryptocode_handler,
     }

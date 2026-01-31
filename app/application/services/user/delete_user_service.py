@@ -4,6 +4,9 @@ from app.domain.exceptions import ForbiddenError, NotFoundError
 from app.domain.entities.user import User
 from app.domain.repositories.user_repository import UserRepository
 from app.domain.uow.unit_of_work import UnitOfWork
+from app.drivers.interfaces.cryptocode_handler_interface import (
+    CryptocodeHandlerInterface,
+)
 from app.drivers.interfaces.flask_login_handler_interface import (
     FlaskLoginHandlerInterface,
 )
@@ -17,12 +20,14 @@ class DeleteUserService:
         user_repository: UserRepository,
         flask_login_handler: FlaskLoginHandlerInterface,
         unit_of_work: UnitOfWork,
+        cryptocode_handler: CryptocodeHandlerInterface,
     ) -> None:
         self.__user_repository = user_repository
         self.__flask_login_handler = flask_login_handler
         self.__command = None
         self.__user_to_delete = None
         self.__uow = unit_of_work
+        self.__cryptocode_handler = cryptocode_handler
 
     def to_execute(self, command: DeleteUserCommand) -> Dict[User]:
         self.__command = command
@@ -54,4 +59,5 @@ class DeleteUserService:
             UserRules.validate_self_delete_otp(
                 self.__user_to_delete,
                 self.__command.otp_code,
+                self.__cryptocode_handler,
             )

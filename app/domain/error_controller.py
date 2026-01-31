@@ -5,6 +5,7 @@ from app.domain.exceptions import (
     NotFoundError,
     UnauthorizedError,
 )
+import logging
 
 
 def register_error_handlers(app):
@@ -21,6 +22,9 @@ def register_error_handlers(app):
 
     @app.errorhandler(Exception)
     def handle_generic_error(error):
+
+        logging.error("Server Error", exc_info=True)
+
         return (
             jsonify({"errors": [{"title": "Server Error", "detail": str(error)}]}),
             500,

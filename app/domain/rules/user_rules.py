@@ -14,6 +14,9 @@ from app.domain.repositories.user_repository import UserRepository
 from app.drivers.interfaces.flask_login_handler_interface import (
     FlaskLoginHandlerInterface,
 )
+from app.drivers.interfaces.cryptocode_handler_interface import (
+    CryptocodeHandlerInterface,
+)
 
 
 class UserRules:
@@ -89,11 +92,14 @@ class UserRules:
         return user
 
     @staticmethod
-    def validate_self_delete_otp(user, otp_code: str | None):
+    def validate_self_delete_otp(
+        user: User, otp_code: str | None, cryptocode_handler: CryptocodeHandlerInterface
+    ):
         if not otp_code:
             raise UnauthorizedError(message="Código 2FA é obrigatório")
 
-        totp = pyotp.TOTP(user.two_fa_secret)
+        two_fa_secret = cryptocode_handler.decrypting(user.two_fa_secret)
+        totp = pyotp.TOTP(two_fa_secret)
 
         if not totp.verify(otp_code, valid_window=1):
             raise UnauthorizedError(message="Código 2FA inválido ou expirado")
