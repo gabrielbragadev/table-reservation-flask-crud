@@ -11,7 +11,7 @@ from app.interfaces.http.controllers.reservation_controllers.factories.read_all_
 )
 
 
-@reservations_bp.route("/", methods=["GET"])
+@reservations_bp.route("", methods=["GET"])
 @login_required
 def get_reservations():
 

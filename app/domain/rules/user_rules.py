@@ -37,12 +37,10 @@ class UserRules:
             )
 
     @staticmethod
-    def validate_user_role_permission(command: CreateUserCommand) -> None:
+    def validate_user_role_permission(command: UserOwnershipCommand) -> None:
 
         if command.requester_role and command.requester_role != "admin":
-            raise ForbiddenError(
-                message="Você não tem permissão para realizar esta ação."
-            )
+            raise ForbiddenError(message="Ação permitida apenas para administradores.")
 
     @staticmethod
     def validate_user_cannot_view_others(command: UserOwnershipCommand) -> None:

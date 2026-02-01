@@ -7,7 +7,7 @@ from app.interfaces.http.controllers.user_controllers.factories.create_controlle
 from app.interfaces.http.controllers.user_controllers import users_bp
 
 
-@users_bp.route("/", methods=["POST"])
+@users_bp.route("", methods=["POST"])
 def create_user():
 
     factory = create_controller_factory()

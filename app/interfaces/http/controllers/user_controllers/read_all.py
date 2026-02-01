@@ -7,7 +7,7 @@ from app.interfaces.http.controllers.user_controllers.factories.read_all_control
 )
 
 
-@users_bp.route("/", methods=["GET"])
+@users_bp.route("", methods=["GET"])
 @login_required
 def get_users():
 

@@ -12,7 +12,7 @@ from app.interfaces.http.controllers.reservation_controllers.factories.create_fa
 )
 
 
-@reservations_bp.route("/", methods=["POST"])
+@reservations_bp.route("", methods=["POST"])
 @login_required
 def create_reservation():
 
