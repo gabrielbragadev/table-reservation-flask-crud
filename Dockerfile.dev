@@ -1,0 +1,29 @@
+# ===== STAGE 1: build =====
+FROM python:3.12.3-alpine3.20 AS builder
+
+WORKDIR /app
+
+RUN apk add --no-cache \
+    build-base \
+    libffi-dev
+
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# ===== STAGE 2: runtime =====
+FROM python:3.12.3-alpine3.20
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Só o necessário em runtime
+RUN apk add --no-cache libffi
+
+COPY --from=builder /install /usr/local
+COPY . .
+
+EXPOSE 5000
+CMD ["python", "run.py"]
