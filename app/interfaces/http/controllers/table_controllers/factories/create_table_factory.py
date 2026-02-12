@@ -9,7 +9,7 @@ from app.infrastructure.persistence.sqlalchemy.unit_of_work import SqlAlchemyUni
 from app.infrastructure.persistence.sqlalchemy.user_repository import UserRepository
 
 
-def create_table_factory(data: Dict) -> Dict[object]:
+def create_table_factory(data: Dict) -> dict:
     table_repository = TableRepository(db.session)
     user_repository = UserRepository(db.session)
     unit_of_work = SqlAlchemyUnitOfWork(db.session)

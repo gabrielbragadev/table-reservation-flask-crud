@@ -1,4 +1,4 @@
-from typing import Dict
+
 
 from app.domain.entities.user import User
 from app.domain.repositories.user_repository import UserRepository
@@ -28,7 +28,7 @@ class DeleteUserService:
         self.__uow = unit_of_work
         self.__cryptocode_handler = cryptocode_handler
 
-    def to_execute(self, command: DeleteUserCommand) -> Dict[User]:
+    def to_execute(self, command: DeleteUserCommand) -> User:
         self.__command = command
         self.get_user_to_delete()
 

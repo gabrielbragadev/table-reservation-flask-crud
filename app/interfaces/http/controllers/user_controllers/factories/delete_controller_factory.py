@@ -9,7 +9,7 @@ from app.infrastructure.extensions import db
 from app.drivers.cryptocode_handler import CryptocodeHandler
 
 
-def delete_controller_factory(user_id: int) -> Dict[object]:
+def delete_controller_factory(user_id: int) -> dict:
     data = request.get_json(silent=True) or {}
 
     user_repository = UserRepository(db.session)

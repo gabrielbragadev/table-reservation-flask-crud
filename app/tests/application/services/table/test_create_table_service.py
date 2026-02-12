@@ -1,4 +1,4 @@
-# pytest .\app\tests\application\services\table\test_create_table_service.py -s -v
+# pytest ./app/tests/application/services/table/test_create_table_service.py -s -v
 
 import pytest
 from unittest.mock import Mock

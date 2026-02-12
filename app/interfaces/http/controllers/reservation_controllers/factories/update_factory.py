@@ -23,7 +23,7 @@ from app.infrastructure.extensions import db
 from app.infrastructure.persistence.sqlalchemy.unit_of_work import SqlAlchemyUnitOfWork
 
 
-def update_factory(reservation_id: int) -> Dict[object]:
+def update_factory(reservation_id: int) -> dict:
     data = ReservationUpdateSchema().load(request.get_json())
 
     reservation_repository = ReservationRepository(db.session)

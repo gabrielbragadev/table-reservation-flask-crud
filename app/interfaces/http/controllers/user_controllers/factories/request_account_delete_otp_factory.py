@@ -6,7 +6,7 @@ from app.infrastructure.persistence.sqlalchemy.user_repository import UserReposi
 from app.infrastructure.extensions import db
 
 
-def generation_delete_acc_otp_factory() -> Dict[object]:
+def generation_delete_acc_otp_factory() -> dict:
     user_repository = UserRepository(db.session)
     login_handler = FlaskLoginHandler()
     unit_of_work = SqlAlchemyUnitOfWork(db.session)

@@ -11,7 +11,7 @@ from app.infrastructure.persistence.sqlalchemy.user_repository import UserReposi
 from app.infrastructure.extensions import db
 
 
-def cancel_factory(reservation_id: int) -> Dict[object]:
+def cancel_factory(reservation_id: int) -> dict:
     reservation_repository = ReservationRepository(db.session)
     user_repository = UserRepository(db.session)
     unit_of_work = SqlAlchemyUnitOfWork(db.session)

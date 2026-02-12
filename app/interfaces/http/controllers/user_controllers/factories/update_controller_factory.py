@@ -9,7 +9,7 @@ from app.infrastructure.persistence.sqlalchemy.user_repository import UserReposi
 from app.infrastructure.extensions import db
 
 
-def update_controller_factory(user_id: int, data: Dict) -> Dict[object]:
+def update_controller_factory(user_id: int, data: Dict) -> dict:
     user_repository = UserRepository(db.session)
     bcrypt_handler = BcryptHandler()
     unit_of_work = SqlAlchemyUnitOfWork(db.session)

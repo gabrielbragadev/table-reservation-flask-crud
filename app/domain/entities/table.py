@@ -1,4 +1,3 @@
-from sqlalchemy.orm import relationship
 
 from app.infrastructure.extensions import db
 

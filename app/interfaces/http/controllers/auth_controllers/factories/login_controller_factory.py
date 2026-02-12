@@ -10,7 +10,7 @@ from app.infrastructure.extensions import db
 from app.interfaces.http.schemas.user.user_login_schema import UserLoginSchema
 
 
-def login_controller_factory() -> Dict[object]:
+def login_controller_factory() -> dict:
     bcrypt_handler = BcryptHandler()
     user_repository = UserRepository(db.session)
     flask_login_handler = FlaskLoginHandler()

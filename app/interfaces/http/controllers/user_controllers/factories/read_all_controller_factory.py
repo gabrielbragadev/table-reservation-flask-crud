@@ -6,7 +6,7 @@ from app.infrastructure.persistence.sqlalchemy.user_repository import UserReposi
 from app.infrastructure.extensions import db
 
 
-def read_all_factory() -> Dict[object]:
+def read_all_factory() -> dict:
     user_repository = UserRepository(db.session)
 
     requester = user_repository.find_by_id(current_user.id)

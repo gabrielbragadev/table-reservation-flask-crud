@@ -1,6 +1,5 @@
-from typing import Dict
+from typing import Any, Dict
 from app.application.commands.user.read_user_command import ReadUserCommand
-from app.domain.entities.user import User
 from app.domain.exceptions import NotFoundError
 from app.domain.repositories.user_repository import UserRepository
 from app.domain.rules.user_rules import UserRules
@@ -12,7 +11,7 @@ class GetUserService:
         self.__user_to_read = None
         self.__command = None
 
-    def to_execute(self, command: ReadUserCommand) -> Dict[str]:
+    def to_execute(self, command: ReadUserCommand) -> Dict[str, Any]:
         self.__command = command
 
         UserRules.validate_user_cannot_view_others(self.__command)
@@ -37,7 +36,7 @@ class GetUserService:
         if self.__is_user_nonexistent():
             self.__not_found_exception()
 
-    def __to_fill_return_dict(self) -> Dict[str]:
+    def __to_fill_return_dict(self) -> Dict[str, Any]:
         return {
             "username": self.__user_to_read.username,
             "email": self.__user_to_read.email,

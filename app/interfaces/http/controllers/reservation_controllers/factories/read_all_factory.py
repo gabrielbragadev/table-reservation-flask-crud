@@ -10,7 +10,7 @@ from app.infrastructure.persistence.sqlalchemy.user_repository import UserReposi
 from app.infrastructure.extensions import db
 
 
-def read_all_factory() -> Dict[object]:
+def read_all_factory() -> dict:
     reservation_repository = ReservationRepository(db.session)
     user_repository = UserRepository(db.session)
 

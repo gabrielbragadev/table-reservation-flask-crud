@@ -6,7 +6,7 @@ from app.interfaces.http.controllers import register_routes
 from app.infrastructure.config import Config
 from app.infrastructure.extensions import db, login_manager, socketio
 from app.domain.entities.reservation import Reservation
-from app.domain.entities.table import Table
+from app.domain.entities.table import  Table
 from app.domain.entities.user import User
 
 

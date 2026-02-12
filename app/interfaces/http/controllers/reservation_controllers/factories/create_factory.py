@@ -21,7 +21,7 @@ from app.interfaces.http.schemas.reservation.reservation_create_schema import (
 from app.infrastructure.extensions import db
 
 
-def create_factory() -> Dict[object]:
+def create_factory() -> dict:
 
     data = ReservationCreateSchema().load(request.get_json())
 

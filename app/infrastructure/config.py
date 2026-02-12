@@ -1,5 +1,10 @@
+import os
+
 class Config:
-    SECRET_KEY = "your_secret_key"
+    SECRET_KEY = os.getenv("SECRET_KEY", "default_secret")
     SQLALCHEMY_DATABASE_URI = (
-        "mysql+pymysql://root:admin123@127.0.0.1:3306/table-reservation"
+        f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
+        f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
     )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
