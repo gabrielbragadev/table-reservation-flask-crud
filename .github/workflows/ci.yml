@@ -34,6 +34,8 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v6
         with:
+          context: .
+          file: ./Dockerfile.dev
           push: true
           tags: |
             gabrielmvb2003/table-reservation-ci-api:${{ steps.generate_tag.outputs.sha }}
