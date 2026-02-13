@@ -1,29 +1,29 @@
-
 name: CI
 
-on: 
+on:
   push:
     branches:
       - main
 
 jobs:
   build:
-    name: 'Build and push'
+    name: "Build and push"
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
-      with:
-        python-version: '3.13' 
-    - run: python --version
+      - uses: actions/checkout@v6
 
-    - name: Generate Tag  
-      id: generate_tag
-      run: 
-        SHA=$(echo $GITHUB_SHA | head -c7)
-        echo "sha=$SHA" >> $GITHUB_OUTPUT
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
 
-    - name: Build docker image 
-      run: docker build -f Dockerfile.dev -t table-reservation-ci-api:${{ steps.generate_tag.outputs.sha }} .
-    
+      - run: python --version
+
+      - name: Generate Tag
+        id: generate_tag
+        run: |
+          SHA=$(echo $GITHUB_SHA | head -c7)
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Build docker image
+        run: docker build -f Dockerfile.dev -t table-reservation-ci-api:${{ steps.generate_tag.outputs.sha }} .
