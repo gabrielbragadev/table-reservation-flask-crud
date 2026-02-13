@@ -31,8 +31,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}          
 
-      - name: Build docker image
-        run: docker build -f Dockerfile.dev -t gabrielmvb2003/table-reservation-ci-api:${{ steps.generate_tag.outputs.sha }} .
-
-      - name: Push Image  
-        run: docker push gabrielmvb2003/table-reservation-ci-api:${{ steps.generate_tag.outputs.sha }}   
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: |
+            gabrielmvb2003/table-reservation-ci-api:${{ steps.generate_tag.outputs.sha }}
+            gabrielmvb2003/table-reservation-ci-api:latest
